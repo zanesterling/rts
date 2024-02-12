@@ -8,6 +8,8 @@ use std::thread::sleep;
 use std::time::Duration;
 
 const OBJ_RAD: u32 = 20;
+const BG_COLOR: Color = Color::RGB(40, 42, 54);
+const FG_COLOR: Color = Color::RGB(255, 121, 198);
 
 fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -20,25 +22,30 @@ fn main() {
 
     let mut canvas = window.into_canvas().build().unwrap();
 
-    canvas.set_draw_color(Color::RGB(0, 255, 255));
+    canvas.set_draw_color(BG_COLOR);
     canvas.clear();
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut obj_x = 0;
     let mut obj_y = 0;
+    let mut mouse_down = false;
     'running: loop {
-        canvas.set_draw_color(Color::RGB(40, 42, 54));
-        canvas.clear();
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
                 },
+                Event::KeyDown { keycode: Some(Keycode::R), .. } => {
+                    canvas.set_draw_color(BG_COLOR);
+                    canvas.clear();
+                },
                 Event::MouseButtonDown {x, y, ..} => {
                     obj_x = x;
                     obj_y = y;
+                    mouse_down = true;
                 },
+                Event::MouseButtonUp {..} => { mouse_down = false; },
                 Event::MouseMotion { mousestate, x, y, ..} => {
                     if mousestate.left() {
                         obj_x = x;
@@ -49,10 +56,12 @@ fn main() {
             }
         }
 
-        canvas.set_draw_color(Color::RGB(255, 121, 198));
-        let _ = canvas.fill_rect(Rect::new(
-            obj_x - OBJ_RAD as i32, obj_y - OBJ_RAD as i32,
-            2*OBJ_RAD, 2*OBJ_RAD));
+        if mouse_down {
+            canvas.set_draw_color(FG_COLOR);
+            let _ = canvas.fill_rect(Rect::new(
+                obj_x - OBJ_RAD as i32, obj_y - OBJ_RAD as i32,
+                2*OBJ_RAD, 2*OBJ_RAD));
+        }
         canvas.present();
         sleep(Duration::new(0, 1_000_000_000u32 / 120));
     }
