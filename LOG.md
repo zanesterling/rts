@@ -1,5 +1,10 @@
 # Development log
 
+## 2024-02-12
+Back again today. Let's make tonight's mission trying to get mouse input
+working.  We'll react to a click event, and when it happens we move the only
+rectangle to that spot.
+
 ## 2024-02-11
 I'm developing this on WSL. To get a window rendering with SDL2 I needed to go
 through a few hoops.
