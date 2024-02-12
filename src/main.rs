@@ -39,6 +39,12 @@ fn main() {
                     obj_x = x;
                     obj_y = y;
                 },
+                Event::MouseMotion { mousestate, x, y, ..} => {
+                    if mousestate.left() {
+                        obj_x = x;
+                        obj_y = y;
+                    }
+                },
                 _ => {},
             }
         }
