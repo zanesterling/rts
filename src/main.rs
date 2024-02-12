@@ -54,6 +54,6 @@ fn main() {
             obj_x - OBJ_RAD as i32, obj_y - OBJ_RAD as i32,
             2*OBJ_RAD, 2*OBJ_RAD));
         canvas.present();
-        sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        sleep(Duration::new(0, 1_000_000_000u32 / 120));
     }
 }
