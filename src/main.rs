@@ -4,6 +4,7 @@ extern crate sdl2;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
@@ -74,7 +75,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
             canvas.set_draw_color(BG_COLOR);
             canvas.clear();
         },
-        Event::MouseButtonDown {x, y, ..} => {
+        Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Left, ..} => {
             state.drag_state = Some(DragState {
                 from_x: x,
                 from_y: y,
@@ -82,7 +83,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                 to_y: y,
             });
         },
-        Event::MouseButtonUp {x, y, ..} => {
+        Event::MouseButtonUp {x, y, mouse_btn: MouseButton::Left, ..} => {
             // Select units that are in the box.
             if let Some(drag_state) = &state.drag_state {
                 let rect = rect_from_points(
@@ -99,13 +100,15 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
             }
             state.drag_state = None;
         },
-        Event::MouseMotion {x, y, ..} => {
-            match &mut state.drag_state {
-                Some(drag_state) => {
-                    drag_state.to_x = x;
-                    drag_state.to_y = y;
-                },
-                None => {},
+        Event::MouseMotion {x, y, mousestate, ..} => {
+            if mousestate.left() {
+                match &mut state.drag_state {
+                    Some(drag_state) => {
+                        drag_state.to_x = x;
+                        drag_state.to_y = y;
+                    },
+                    None => {},
+                }
             }
         },
         _ => {},
