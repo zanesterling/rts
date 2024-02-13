@@ -13,10 +13,11 @@ use sdl2::video::Window;
 use std::thread::sleep;
 use std::time::Duration;
 
-const OBJ_RAD: u32 = 20;
+const OBJ_RAD: f32 = 20.;
 const BG_COLOR: Color = Color::RGB(40, 42, 54);
 const UNIT_COLOR: Color = Color::RGB(255, 121, 198);
 const UNIT_SELECTED_COLOR: Color = Color::RGB(80, 250, 123);
+const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
 
 struct State {
@@ -53,6 +54,9 @@ fn main() {
         drag_state: None,
     };
     while state.running {
+        // Update world.
+        state.game.tick();
+
         // Render.
         render(&mut canvas, &state);
         canvas.present();
@@ -91,14 +95,23 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                 for unit in state.game.units.iter_mut() {
                     unit.selected = rect.has_intersection(
                         Rect::new(
-                            unit.world_x - OBJ_RAD as i32,
-                            unit.world_y - OBJ_RAD as i32,
-                            OBJ_RAD * 2, OBJ_RAD * 2
+                            (unit.pos.x - OBJ_RAD) as i32,
+                            (unit.pos.y - OBJ_RAD) as i32,
+                            (OBJ_RAD * 2.) as u32,
+                            (OBJ_RAD * 2.) as u32
                         )
                     );
                 }
             }
             state.drag_state = None;
+        },
+        Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Right, ..} => {
+            for unit in state.game.units.iter_mut() {
+                if unit.selected {
+                    unit.move_target = Some(
+                        game::Point::new(x as f32, y as f32));
+                }
+            }
         },
         Event::MouseMotion {x, y, mousestate, ..} => {
             if mousestate.left() {
@@ -121,11 +134,13 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
 
     for unit in state.game.units.iter() {
         canvas.set_draw_color(
-            if unit.selected { UNIT_SELECTED_COLOR } else { UNIT_COLOR }
+            if unit.selected { UNIT_SELECTED_COLOR }
+            else if unit.move_target.is_some() { UNIT_MOVING_COLOR }
+            else { UNIT_COLOR }
         );
         let _ = canvas.fill_rect(Rect::new(
-            unit.world_x - OBJ_RAD as i32, unit.world_y - OBJ_RAD as i32,
-            2*OBJ_RAD, 2*OBJ_RAD
+            (unit.pos.x - OBJ_RAD) as i32, (unit.pos.y - OBJ_RAD) as i32,
+            (2.*OBJ_RAD) as u32, (2.*OBJ_RAD) as u32
         ));
     }
 
