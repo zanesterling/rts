@@ -1,5 +1,14 @@
 # Development log
 
+## 2024-02-14
+Let's try loading and rendering sprites in place of the units today.
+
+## 2024-02-13
+Written the morning after.
+ 
+I achieved what I intended. There are a few units and I can box select and even
+tell them to move.
+
 ## 2024-02-12
 Back again today. Let's make tonight's mission trying to get mouse input
 working.  We'll react to a click event, and when it happens we move the only
