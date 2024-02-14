@@ -2,6 +2,7 @@ mod game;
 
 extern crate sdl2;
 
+use sdl2::Sdl;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
@@ -47,12 +48,16 @@ fn main() {
     canvas.set_draw_color(BG_COLOR);
     canvas.clear();
     canvas.present();
-    let mut event_pump = sdl_context.event_pump().unwrap();
-    let mut state = State {
+    let state = State {
         running: true,
         game: game::State::new(),
         drag_state: None,
     };
+    main_loop(state, canvas, sdl_context);
+}
+
+fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
+    let mut event_pump = sdl_context.event_pump().unwrap();
     while state.running {
         // Update world.
         state.game.tick();
