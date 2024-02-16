@@ -4,6 +4,7 @@ extern crate sdl2;
 
 use sdl2::Sdl;
 use sdl2::event::Event;
+use sdl2::image;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
@@ -36,6 +37,7 @@ struct DragState {
 
 fn main() {
     let sdl_context = sdl2::init().unwrap();
+    let _sdl_image_context = image::init(image::InitFlag::PNG).unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
     let window = video_subsystem.window("rts!", 800, 600)

@@ -9,4 +9,5 @@ edition = "2021"
 sdl2 = "0.36.0"
 
 [dependencies.sdl2]
-features = ["bundled"]
+default-features = false
+features = ["bundled", "image"]

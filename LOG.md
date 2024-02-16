@@ -1,5 +1,13 @@
 # Development log
 
+## 2024-02-16
+Coming back a couple days later. On the 14th I ran into some difficulty getting
+SDL2 to build with image support. I've come back to it now, and found an easy
+explanation for why:
+
+I needed to `sudo apt install libsdl2-image-dev`, not `libsdl2-image-2.0.0`.
+After doing that, I can build with the `"image"` feature enabled, no problem.
+
 ## 2024-02-14
 Let's try loading and rendering sprites in place of the units today.
 
