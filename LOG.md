@@ -8,6 +8,12 @@ explanation for why:
 I needed to `sudo apt install libsdl2-image-dev`, not `libsdl2-image-2.0.0`.
 After doing that, I can build with the `"image"` feature enabled, no problem.
 
+---
+
+Managed to load a PNG file and blit it to the canvas. Boom! Next steps will be
+dividing that image into a sprite sheet, and showing blitting just one sprite
+from the sheet. Then after that I can try to do animations :o
+
 ## 2024-02-14
 Let's try loading and rendering sprites in place of the units today.
 

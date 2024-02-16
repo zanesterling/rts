@@ -5,11 +5,14 @@ extern crate sdl2;
 use sdl2::Sdl;
 use sdl2::event::Event;
 use sdl2::image;
+use sdl2::image::LoadSurface;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
+use sdl2::render::Texture;
+use sdl2::surface::Surface;
 use sdl2::video::Window;
 
 use std::thread::sleep;
@@ -22,10 +25,11 @@ const UNIT_SELECTED_COLOR: Color = Color::RGB(80, 250, 123);
 const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
 
-struct State {
+struct State<'a, 'b> {
     running: bool,
     game: game::State,
     drag_state: Option<DragState>,
+    sprite_sheet: &'a Texture<'b>,
 }
 
 struct DragState {
@@ -46,6 +50,12 @@ fn main() {
         .unwrap();
 
     let mut canvas = window.into_canvas().build().unwrap();
+    let canvas_txc = canvas.texture_creator();
+
+    let sprite_sheet = Surface::from_file("media/sprite-sheet.png")
+        .unwrap()
+        .as_texture(&canvas_txc)
+        .unwrap();
 
     canvas.set_draw_color(BG_COLOR);
     canvas.clear();
@@ -54,6 +64,7 @@ fn main() {
         running: true,
         game: game::State::new(),
         drag_state: None,
+        sprite_sheet: &sprite_sheet,
     };
     main_loop(state, canvas, sdl_context);
 }
@@ -161,6 +172,8 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
         },
         None => {},
     }
+
+    let _ = canvas.copy(state.sprite_sheet, None, None);
 }
 
 fn rect_from_points(x1: i32, y1: i32, x2: i32, y2: i32) -> Rect {
