@@ -1,4 +1,7 @@
 use sdl2::image::LoadSurface;
+use sdl2::rect::Rect;
+use sdl2::render::Canvas;
+use sdl2::render::RenderTarget;
 use sdl2::render::Texture;
 use sdl2::render::TextureCreator;
 use sdl2::surface::Surface;
@@ -44,6 +47,25 @@ impl<'a> SpriteSheet<'a> {
       sprite_map,
     })
   }
+
+  pub fn blit_sprite<Ctx: RenderTarget>(
+    &self,
+    sprite_id: &str,
+    canvas: &mut Canvas<Ctx>,
+    x_off: u32,
+    y_off: u32,
+  ) -> Result<Rect, String> {
+    for sprite_ref in self.sprite_map.iter() {
+      if sprite_ref.name == sprite_id {
+        let src_rect = sprite_ref.rect();
+        let dst_rect = Rect::new(
+          x_off as i32, y_off as i32, src_rect.width(), src_rect.height());
+        canvas.copy(&self.texture, src_rect, dst_rect)?;
+        return Ok(dst_rect);
+      }
+    }
+    Err(format!("sprite \"{}\" not found", sprite_id))
+  }
 }
 
 pub struct SpriteRef {
@@ -52,6 +74,12 @@ pub struct SpriteRef {
   pub offset_y: u32,
   pub width:    u32,
   pub height:   u32,
+}
+
+impl SpriteRef {
+  fn rect(&self) -> Rect {
+    Rect::new(self.offset_x as i32, self.offset_y as i32, self.width, self.height)
+  }
 }
 
 impl FromStr for SpriteRef {

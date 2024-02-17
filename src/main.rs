@@ -11,7 +11,6 @@ use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
-use sdl2::render::Texture;
 use sdl2::video::Window;
 
 use std::process::exit;
@@ -27,12 +26,11 @@ const UNIT_SELECTED_COLOR: Color = Color::RGB(80, 250, 123);
 const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
 const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
-
-struct State<'a, 'b> {
+struct State<'a> {
     running: bool,
     game: game::State,
     drag_state: Option<DragState>,
-    sprite_sheet: &'a Texture<'b>,
+    sprite_sheet: SpriteSheet<'a>,
 }
 
 struct DragState {
@@ -73,7 +71,7 @@ fn main() {
         running: true,
         game: game::State::new(),
         drag_state: None,
-        sprite_sheet: &sprite_sheet.texture,
+        sprite_sheet: sprite_sheet,
     };
     main_loop(state, canvas, sdl_context);
 }
@@ -182,7 +180,11 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
         None => {},
     }
 
-    let _ = canvas.copy(state.sprite_sheet, None, None);
+    let sprite_rect =
+        state.sprite_sheet.blit_sprite("newt_gingrich", canvas, 0, 0)
+            .unwrap();
+    canvas.set_draw_color(DRAG_PERIMETER_COLOR);
+    let _ = canvas.draw_rect(sprite_rect);
 }
 
 fn rect_from_points(x1: i32, y1: i32, x2: i32, y2: i32) -> Rect {
