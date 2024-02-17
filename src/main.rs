@@ -6,16 +6,15 @@ extern crate sdl2;
 use sdl2::Sdl;
 use sdl2::event::Event;
 use sdl2::image;
-use sdl2::image::LoadSurface;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use sdl2::render::Texture;
-use sdl2::surface::Surface;
 use sdl2::video::Window;
 
+use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -27,6 +26,7 @@ const UNIT_COLOR: Color = Color::RGB(255, 121, 198);
 const UNIT_SELECTED_COLOR: Color = Color::RGB(80, 250, 123);
 const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
+const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
 
 struct State<'a, 'b> {
     running: bool,
@@ -55,13 +55,16 @@ fn main() {
     let mut canvas = window.into_canvas().build().unwrap();
     let canvas_txc = canvas.texture_creator();
 
-    let _sprite_sheet =
-        SpriteSheet::from_file("media/sprite-sheet.png", &canvas_txc)
-            .unwrap();
-    let sprite_sheet = Surface::from_file("media/sprite-sheet.png")
-        .unwrap()
-        .as_texture(&canvas_txc)
-        .unwrap();
+    let sprite_sheet =
+        SpriteSheet::from_file(SPRITE_SHEET_PATH, &canvas_txc)
+            .unwrap_or_else(|e| {
+                println!(
+                    "error loading sprite sheet \"{}\": {}",
+                    SPRITE_SHEET_PATH,
+                    e
+                );
+                exit(1);
+            });
 
     canvas.set_draw_color(BG_COLOR);
     canvas.clear();
@@ -70,7 +73,7 @@ fn main() {
         running: true,
         game: game::State::new(),
         drag_state: None,
-        sprite_sheet: &sprite_sheet,
+        sprite_sheet: &sprite_sheet.texture,
     };
     main_loop(state, canvas, sdl_context);
 }
