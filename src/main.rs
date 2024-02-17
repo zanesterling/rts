@@ -1,4 +1,5 @@
 mod game;
+mod sprite_sheet;
 
 extern crate sdl2;
 
@@ -17,6 +18,8 @@ use sdl2::video::Window;
 
 use std::thread::sleep;
 use std::time::Duration;
+
+use crate::sprite_sheet::SpriteSheet;
 
 const OBJ_RAD: f32 = 20.;
 const BG_COLOR: Color = Color::RGB(40, 42, 54);
@@ -52,6 +55,9 @@ fn main() {
     let mut canvas = window.into_canvas().build().unwrap();
     let canvas_txc = canvas.texture_creator();
 
+    let _sprite_sheet =
+        SpriteSheet::from_file("media/sprite-sheet.png", &canvas_txc)
+            .unwrap();
     let sprite_sheet = Surface::from_file("media/sprite-sheet.png")
         .unwrap()
         .as_texture(&canvas_txc)
