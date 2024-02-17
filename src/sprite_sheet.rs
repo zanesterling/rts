@@ -55,11 +55,24 @@ impl<'a> SpriteSheet<'a> {
     x_off: u32,
     y_off: u32,
   ) -> Result<Rect, String> {
+    self.blit_sprite_with_mag(sprite_id, canvas, x_off, y_off, 1)
+  }
+
+  pub fn blit_sprite_with_mag<Ctx: RenderTarget>(
+    &self,
+    sprite_id: &str,
+    canvas: &mut Canvas<Ctx>,
+    x_off: u32,
+    y_off: u32,
+    mag_factor: u32,
+  ) -> Result<Rect, String> {
     for sprite_ref in self.sprite_map.iter() {
       if sprite_ref.name == sprite_id {
         let src_rect = sprite_ref.rect();
         let dst_rect = Rect::new(
-          x_off as i32, y_off as i32, src_rect.width(), src_rect.height());
+          x_off as i32, y_off as i32,
+          mag_factor * src_rect.width(),
+          mag_factor * src_rect.height());
         canvas.copy(&self.texture, src_rect, dst_rect)?;
         return Ok(dst_rect);
       }

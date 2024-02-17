@@ -181,8 +181,9 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     }
 
     let sprite_rect =
-        state.sprite_sheet.blit_sprite("newt_gingrich", canvas, 0, 0)
-            .unwrap();
+        state.sprite_sheet.blit_sprite_with_mag(
+            "newt_gingrich", canvas, 0, 0, 16)
+        .unwrap();
     canvas.set_draw_color(DRAG_PERIMETER_COLOR);
     let _ = canvas.draw_rect(sprite_rect);
 }
