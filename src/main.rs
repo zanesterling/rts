@@ -1,4 +1,5 @@
 mod game;
+#[allow(dead_code)]
 mod sprite_sheet;
 
 extern crate sdl2;
