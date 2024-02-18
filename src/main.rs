@@ -18,7 +18,8 @@ use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
 
-use crate::sprite_sheet::SpriteSheet;
+use sprite_sheet::SpriteSheet;
+use game::Point;
 
 const OBJ_RAD: f32 = 16.;
 const BG_COLOR: Color = Color::RGB(40, 42, 54);
@@ -27,18 +28,43 @@ const UNIT_SELECTED_COLOR: Color = Color::RGB(80, 250, 123);
 const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
 const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
+
 struct State<'a> {
     running: bool,
     game: game::State,
-    drag_state: Option<DragState>,
+    drag_state: DragState,
     sprite_sheet: SpriteSheet<'a>,
+    camera_pos: Point,
 }
 
-struct DragState {
+enum DragState {
+    None,
+    BoxSelect(BoxSelect),
+    CameraDrag,
+}
+
+struct BoxSelect {
     from_x: i32,
     from_y: i32,
     to_x: i32,
     to_y: i32,
+}
+
+impl BoxSelect {
+    fn resolve(&self, final_x: i32, final_y: i32, game: &mut game::State) {
+        let rect = rect_from_points(
+            self.from_x, self.from_y, final_x, final_y);
+        for unit in game.units.iter_mut() {
+            unit.selected = rect.has_intersection(
+                Rect::new(
+                    (unit.pos.x - OBJ_RAD) as i32,
+                    (unit.pos.y - OBJ_RAD) as i32,
+                    (OBJ_RAD * 2.) as u32,
+                    (OBJ_RAD * 2.) as u32
+                )
+            );
+        }
+    }
 }
 
 fn main() {
@@ -71,8 +97,9 @@ fn main() {
     let state = State {
         running: true,
         game: game::State::new(),
-        drag_state: None,
+        drag_state: DragState::None,
         sprite_sheet: sprite_sheet,
+        camera_pos: Point::new(0., 0.),
     };
     main_loop(state, canvas, sdl_context);
 }
@@ -111,7 +138,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
 
         // Left mouse down / up: box select.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Left, ..} => {
-            state.drag_state = Some(DragState {
+            state.drag_state = DragState::BoxSelect(BoxSelect {
                 from_x: x,
                 from_y: y,
                 to_x: x,
@@ -120,21 +147,10 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         },
         Event::MouseButtonUp {x, y, mouse_btn: MouseButton::Left, ..} => {
             // Select units that are in the box.
-            if let Some(drag_state) = &state.drag_state {
-                let rect = rect_from_points(
-                    drag_state.from_x, drag_state.from_y, x, y);
-                for unit in state.game.units.iter_mut() {
-                    unit.selected = rect.has_intersection(
-                        Rect::new(
-                            (unit.pos.x - OBJ_RAD) as i32,
-                            (unit.pos.y - OBJ_RAD) as i32,
-                            (OBJ_RAD * 2.) as u32,
-                            (OBJ_RAD * 2.) as u32
-                        )
-                    );
-                }
+            if let DragState::BoxSelect(box_select) = &state.drag_state {
+                box_select.resolve(x, y, &mut state.game);
             }
-            state.drag_state = None;
+            state.drag_state = DragState::None;
         },
 
         // Right mouse button -- issue move command.
@@ -147,14 +163,29 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
             }
         },
 
-        Event::MouseMotion {x, y, mousestate, ..} => {
-            if mousestate.left() {
-                if let Some(drag_state) = &mut state.drag_state {
-                    drag_state.to_x = x;
-                    drag_state.to_y = y;
-                }
+        // Middle mouse down/up: drag view.
+        Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Middle, .. } => {
+            // End box-select if you middle mouse click-n-drag.
+            if let DragState::BoxSelect(box_select) = &state.drag_state {
+                box_select.resolve(x, y, &mut state.game);
+            }
+            state.drag_state = DragState::CameraDrag;
+        },
+
+        Event::MouseMotion {x, y, xrel, yrel, ..} => {
+            match &mut state.drag_state {
+                DragState::BoxSelect(box_select) => {
+                    box_select.to_x = x;
+                    box_select.to_y = y;
+                },
+                DragState::CameraDrag => {
+                    state.camera_pos.x += xrel as f32;
+                    state.camera_pos.y += yrel as f32;
+                },
+                DragState::None => {},
             }
         },
+
         _ => {},
     }
 }
@@ -185,11 +216,11 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     }
 
     // Draw box-selection box.
-    if let Some(drag_state) = &state.drag_state {
+    if let DragState::BoxSelect(box_select) = &state.drag_state {
         canvas.set_draw_color(DRAG_PERIMETER_COLOR);
         let _ = canvas.draw_rect(rect_from_points(
-            drag_state.from_x, drag_state.from_y,
-            drag_state.to_x, drag_state.to_y,
+            box_select.from_x, box_select.from_y,
+            box_select.to_x, box_select.to_y,
         ));
     }
 }
