@@ -19,7 +19,7 @@ use std::time::Duration;
 
 use crate::sprite_sheet::SpriteSheet;
 
-const OBJ_RAD: f32 = 20.;
+const OBJ_RAD: f32 = 16.;
 const BG_COLOR: Color = Color::RGB(40, 42, 54);
 const UNIT_COLOR: Color = Color::RGB(255, 121, 198);
 const UNIT_SELECTED_COLOR: Color = Color::RGB(80, 250, 123);
@@ -158,12 +158,20 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     canvas.clear();
 
     for unit in state.game.units.iter() {
+        let rad = OBJ_RAD;
+        let dst = Rect::new(
+            (unit.pos.x - rad) as i32, (unit.pos.y - rad) as i32,
+            (2.*OBJ_RAD) as u32, (2.*OBJ_RAD) as u32
+        );
+        let _ = state.sprite_sheet.blit_sprite_to_rect(
+            unit.sprite_key.as_str(), canvas, dst);
+
         canvas.set_draw_color(
             if unit.selected { UNIT_SELECTED_COLOR }
             else if unit.move_target.is_some() { UNIT_MOVING_COLOR }
             else { UNIT_COLOR }
         );
-        let _ = canvas.fill_rect(Rect::new(
+        let _ = canvas.draw_rect(Rect::new(
             (unit.pos.x - OBJ_RAD) as i32, (unit.pos.y - OBJ_RAD) as i32,
             (2.*OBJ_RAD) as u32, (2.*OBJ_RAD) as u32
         ));
@@ -179,13 +187,6 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
         },
         None => {},
     }
-
-    let sprite_rect =
-        state.sprite_sheet.blit_sprite(
-            "newt_gingrich", canvas, 0, 0, 16)
-        .unwrap();
-    canvas.set_draw_color(DRAG_PERIMETER_COLOR);
-    let _ = canvas.draw_rect(sprite_rect);
 }
 
 fn rect_from_points(x1: i32, y1: i32, x2: i32, y2: i32) -> Rect {

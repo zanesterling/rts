@@ -1,3 +1,5 @@
+use crate::sprite_sheet::SpriteKey;
+
 pub struct State {
   pub units: Vec<Unit>,
 }
@@ -6,9 +8,9 @@ impl State {
   pub fn new() -> State {
     State {
       units: vec![
-        Unit::new(300., 200.),
-        Unit::new(350., 300.),
-        Unit::new(450., 230.),
+        Unit::new(300., 200., "newt_gingrich".to_string()),
+        Unit::new(350., 300., "newt_gingrich".to_string()),
+        Unit::new(450., 230., "newt_gingrich".to_string()),
       ],
     }
   }
@@ -35,15 +37,17 @@ pub struct Unit {
   pub selected: bool,
   pub move_target: Option<Point>,
   pub base_speed: f32,
+  pub sprite_key: SpriteKey,
 }
 
 impl Unit {
-  pub fn new(x: f32, y: f32) -> Unit {
+  pub fn new(x: f32, y: f32, sprite_key: SpriteKey) -> Unit {
     Unit {
       pos: Point::new(x, y),
       selected: false,
       move_target: None,
       base_speed: 1.,
+      sprite_key,
     }
   }
 

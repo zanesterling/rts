@@ -48,6 +48,22 @@ impl<'a> SpriteSheet<'a> {
     })
   }
 
+  pub fn blit_sprite_to_rect<Ctx: RenderTarget>(
+    &self,
+    sprite_id: &str,
+    canvas: &mut Canvas<Ctx>,
+    dst_rect: Rect,
+  ) -> Result<(), String> {
+    for sprite_ref in self.sprite_map.iter() {
+      if sprite_ref.name == sprite_id {
+        let src_rect = sprite_ref.rect();
+        canvas.copy(&self.texture, src_rect, dst_rect)?;
+        return Ok(());
+      }
+    }
+    Err(format!("sprite \"{}\" not found", sprite_id))
+  }
+
   pub fn blit_sprite<Ctx: RenderTarget>(
     &self,
     sprite_id: &str,
@@ -62,7 +78,8 @@ impl<'a> SpriteSheet<'a> {
         let dst_rect = Rect::new(
           x_off as i32, y_off as i32,
           mag_factor * src_rect.width(),
-          mag_factor * src_rect.height());
+          mag_factor * src_rect.height()
+        );
         canvas.copy(&self.texture, src_rect, dst_rect)?;
         return Ok(dst_rect);
       }
@@ -72,12 +89,14 @@ impl<'a> SpriteSheet<'a> {
 }
 
 pub struct SpriteRef {
-  pub name:     String, // Must not have spaces.
+  pub name:     SpriteKey,
   pub offset_x: u32,
   pub offset_y: u32,
   pub width:    u32,
   pub height:   u32,
 }
+
+pub type SpriteKey = String; // Must not have spaces.
 
 impl SpriteRef {
   fn rect(&self) -> Rect {

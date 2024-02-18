@@ -1,5 +1,14 @@
 # Development log
 
+## 2024-02-18
+Today I want to swap out the rendering of units to use sprites from the sprite
+sheet.
+
+---
+
+Did it! Boom! There's definitely some cleanup to be done though. The interface
+is a little grody.
+
 ## 2024-02-17
 Wrote the code to slice up a sprite sheet and blit just one sprite to the
 screen. Woo!
