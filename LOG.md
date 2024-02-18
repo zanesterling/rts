@@ -1,5 +1,9 @@
 # Development log
 
+## 2024-02-17
+Wrote the code to slice up a sprite sheet and blit just one sprite to the
+screen. Woo!
+
 ## 2024-02-16
 Coming back a couple days later. On the 14th I ran into some difficulty getting
 SDL2 to build with image support. I've come back to it now, and found an easy
