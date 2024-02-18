@@ -9,6 +9,14 @@ sheet.
 Did it! Boom! There's definitely some cleanup to be done though. The interface
 is a little grody.
 
+---
+
+What do I want to add now? I've got sprites that can move around...
+Maybe next I'll make it so you can pan around by holding middle-mouse.
+
+So let's think about the state machine here. If you hold middle-mouse, it
+should cancel any ongoing drag interaction.
+
 ## 2024-02-17
 Wrote the code to slice up a sprite sheet and blit just one sprite to the
 screen. Woo!
