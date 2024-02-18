@@ -148,12 +148,9 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
 
         Event::MouseMotion {x, y, mousestate, ..} => {
             if mousestate.left() {
-                match &mut state.drag_state {
-                    Some(drag_state) => {
-                        drag_state.to_x = x;
-                        drag_state.to_y = y;
-                    },
-                    None => {},
+                if let Some(drag_state) = &mut state.drag_state {
+                    drag_state.to_x = x;
+                    drag_state.to_y = y;
                 }
             }
         },
@@ -187,15 +184,12 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     }
 
     // Draw box-selection box.
-    match &state.drag_state {
-        Some(drag_state) => {
-            canvas.set_draw_color(DRAG_PERIMETER_COLOR);
-            let _ = canvas.draw_rect(rect_from_points(
-                drag_state.from_x, drag_state.from_y,
-                drag_state.to_x, drag_state.to_y,
-            ));
-        },
-        None => {},
+    if let Some(drag_state) = &state.drag_state {
+        canvas.set_draw_color(DRAG_PERIMETER_COLOR);
+        let _ = canvas.draw_rect(rect_from_points(
+            drag_state.from_x, drag_state.from_y,
+            drag_state.to_x, drag_state.to_y,
+        ));
     }
 }
 
