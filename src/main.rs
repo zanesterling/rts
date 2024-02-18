@@ -96,14 +96,19 @@ fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
 
 fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
     match event {
+        // Quit.
         Event::Quit {..} |
         Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
             state.running = false;
         },
+
+        // R key: reset
         Event::KeyDown { keycode: Some(Keycode::R), .. } => {
             canvas.set_draw_color(BG_COLOR);
             canvas.clear();
         },
+
+        // Left mouse down / up: box select.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Left, ..} => {
             state.drag_state = Some(DragState {
                 from_x: x,
@@ -130,6 +135,8 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
             }
             state.drag_state = None;
         },
+
+        // Right mouse button -- issue move command.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Right, ..} => {
             for unit in state.game.units.iter_mut() {
                 if unit.selected {
@@ -138,6 +145,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                 }
             }
         },
+
         Event::MouseMotion {x, y, mousestate, ..} => {
             if mousestate.left() {
                 match &mut state.drag_state {
@@ -157,6 +165,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     canvas.set_draw_color(BG_COLOR);
     canvas.clear();
 
+    // Draw units.
     for unit in state.game.units.iter() {
         let rad = OBJ_RAD;
         let dst = Rect::new(
@@ -177,6 +186,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
         ));
     }
 
+    // Draw box-selection box.
     match &state.drag_state {
         Some(drag_state) => {
             canvas.set_draw_color(DRAG_PERIMETER_COLOR);
