@@ -54,16 +54,6 @@ impl<'a> SpriteSheet<'a> {
     canvas: &mut Canvas<Ctx>,
     x_off: u32,
     y_off: u32,
-  ) -> Result<Rect, String> {
-    self.blit_sprite_with_mag(sprite_id, canvas, x_off, y_off, 1)
-  }
-
-  pub fn blit_sprite_with_mag<Ctx: RenderTarget>(
-    &self,
-    sprite_id: &str,
-    canvas: &mut Canvas<Ctx>,
-    x_off: u32,
-    y_off: u32,
     mag_factor: u32,
   ) -> Result<Rect, String> {
     for sprite_ref in self.sprite_map.iter() {
