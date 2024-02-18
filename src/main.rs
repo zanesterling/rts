@@ -18,8 +18,8 @@ use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
 
-use sprite_sheet::SpriteSheet;
 use game::Point;
+use sprite_sheet::SpriteSheet;
 
 const OBJ_RAD: f32 = 16.;
 const BG_COLOR: Color = Color::RGB(40, 42, 54);
