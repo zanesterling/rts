@@ -171,6 +171,11 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
             }
             state.drag_state = DragState::CameraDrag;
         },
+        Event::MouseButtonUp {mouse_btn: MouseButton::Middle, .. } => {
+            if let DragState::CameraDrag = &state.drag_state {
+                state.drag_state = DragState::None;
+            }
+        },
 
         Event::MouseMotion {x, y, xrel, yrel, ..} => {
             match &mut state.drag_state {
