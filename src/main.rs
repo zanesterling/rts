@@ -202,22 +202,24 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     // Draw units.
     for unit in state.game.units.iter() {
         let rad = OBJ_RAD;
+        let wind_x = (unit.pos.x - rad - state.camera_pos.x) as i32;
+        let wind_y = (unit.pos.y - rad - state.camera_pos.y) as i32;
         let dst = Rect::new(
-            (unit.pos.x - rad) as i32, (unit.pos.y - rad) as i32,
-            (2.*OBJ_RAD) as u32, (2.*OBJ_RAD) as u32
+            wind_x, wind_y,
+            (2.*rad) as u32, (2.*rad) as u32
         );
+
+        // Draw unit.
         let _ = state.sprite_sheet.blit_sprite_to_rect(
             unit.sprite_key.as_str(), canvas, dst);
 
+        // Draw debug box around the unit.
         canvas.set_draw_color(
             if unit.selected { UNIT_SELECTED_COLOR }
             else if unit.move_target.is_some() { UNIT_MOVING_COLOR }
             else { UNIT_COLOR }
         );
-        let _ = canvas.draw_rect(Rect::new(
-            (unit.pos.x - OBJ_RAD) as i32, (unit.pos.y - OBJ_RAD) as i32,
-            (2.*OBJ_RAD) as u32, (2.*OBJ_RAD) as u32
-        ));
+        let _ = canvas.draw_rect(dst);
     }
 
     // Draw box-selection box.
