@@ -184,8 +184,8 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                     box_select.to_y = y;
                 },
                 DragState::CameraDrag => {
-                    state.camera_pos.x += xrel as f32;
-                    state.camera_pos.y += yrel as f32;
+                    state.camera_pos.x -= xrel as f32;
+                    state.camera_pos.y -= yrel as f32;
                 },
                 DragState::None => {},
             }
