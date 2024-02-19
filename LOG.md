@@ -1,5 +1,8 @@
 # Development log
 
+## 2024-02-19
+Today I'll make some obstacles, and have the units bump into them.
+
 ## 2024-02-18
 Today I want to swap out the rendering of units to use sprites from the sprite
 sheet.

@@ -2,16 +2,36 @@ use crate::sprite_sheet::SpriteKey;
 
 pub struct State {
   pub units: Vec<Unit>,
+  pub map: Map,
 }
 
 impl State {
   pub fn new() -> State {
+    let o = GridCell::Empty;
+    let l = GridCell::Obstacle;
     State {
       units: vec![
         Unit::new(300., 200., "newt_gingrich".to_string()),
         Unit::new(350., 300., "newt_gingrich".to_string()),
         Unit::new(450., 230., "newt_gingrich".to_string()),
       ],
+
+      map: Map {
+        width:  10,
+        height: 10,
+        grid_cells: vec![
+          o,o,o,o,o,o,o,o,o,o,
+          o,o,o,o,o,o,o,o,o,o,
+          o,o,l,l,l,l,l,l,o,o,
+          o,o,o,o,o,o,o,l,o,o,
+          o,o,o,o,o,l,o,l,o,o,
+          o,o,l,l,l,l,o,l,o,o,
+          o,o,l,o,o,o,o,l,o,o,
+          o,o,l,l,l,l,l,l,o,o,
+          o,o,o,o,o,o,o,o,o,o,
+          o,o,o,o,o,o,o,o,o,o,
+        ],
+      },
     }
   }
 
@@ -90,4 +110,27 @@ impl Point {
       y: self.y - other.y,
     }
   }
+}
+
+pub struct Map {
+  // Width and height are measured in grid units.
+  pub width:  u32,
+  pub height: u32,
+
+  pub grid_cells: Vec<GridCell>,
+}
+
+impl Map {
+  pub fn get_cell(&self, x: u32, y: u32) -> Option<GridCell> {
+    if self.width <= x || self.height <= y { return None }
+    let index = (x + y*self.width) as usize;
+    if self.grid_cells.len() <= index { return None }
+    Some(self.grid_cells[index])
+  }
+}
+
+#[derive(Clone, Copy)]
+pub enum GridCell {
+  Empty,
+  Obstacle,
 }
