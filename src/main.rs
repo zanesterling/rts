@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 mod game;
 #[allow(dead_code)]
 mod sprite_sheet;
@@ -18,15 +19,18 @@ use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
 
-use game::Point;
+use game::{GridTile, Point, TILE_WIDTH};
 use sprite_sheet::SpriteSheet;
 
 const OBJ_RAD: f32 = 16.;
-const BG_COLOR: Color = Color::RGB(40, 42, 54);
+
+const EMPTY_TILE_COLOR: Color = Color::RGB(40, 42, 54);
+const OBSTACLE_COLOR: Color = Color::RGB(255, 184, 108);
 const UNIT_COLOR: Color = Color::RGB(255, 121, 198);
 const UNIT_SELECTED_COLOR: Color = Color::RGB(80, 250, 123);
 const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
+
 const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
 
 struct State<'a> {
@@ -91,9 +95,6 @@ fn main() {
                 exit(1);
             });
 
-    canvas.set_draw_color(BG_COLOR);
-    canvas.clear();
-    canvas.present();
     let state = State {
         running: true,
         game: game::State::new(),
@@ -101,6 +102,8 @@ fn main() {
         sprite_sheet: sprite_sheet,
         camera_pos: Point::new(0., 0.),
     };
+    render(&mut canvas, &state);
+    canvas.present();
     main_loop(state, canvas, sdl_context);
 }
 
@@ -117,23 +120,17 @@ fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
 
         // Handle input.
         for event in event_pump.poll_iter() {
-            handle_event(&mut state, &mut canvas, event);
+            handle_event(&mut state, event);
         }
     }
 }
 
-fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
+fn handle_event(state: &mut State, event: Event) {
     match event {
         // Quit.
         Event::Quit {..} |
         Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
             state.running = false;
-        },
-
-        // R key: reset
-        Event::KeyDown { keycode: Some(Keycode::R), .. } => {
-            canvas.set_draw_color(BG_COLOR);
-            canvas.clear();
         },
 
         // Left mouse down / up: box select.
@@ -196,8 +193,20 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
 }
 
 fn render(canvas: &mut Canvas<Window>, state: &State) {
-    canvas.set_draw_color(BG_COLOR);
+    canvas.set_draw_color(Color::BLACK);
     canvas.clear();
+
+    // Draw terrain.
+    for tile in state.game.map.tiles() {
+        canvas.set_draw_color(match tile.tile {
+            GridTile::Empty => EMPTY_TILE_COLOR,
+            GridTile::Obstacle => OBSTACLE_COLOR,
+        });
+        let wind_x = (tile.x * TILE_WIDTH) as i32 - state.camera_pos.x as i32;
+        let wind_y = (tile.y * TILE_WIDTH) as i32 - state.camera_pos.y as i32;
+        let _ = canvas.fill_rect(
+            Rect::new(wind_x, wind_y, TILE_WIDTH, TILE_WIDTH));
+    }
 
     // Draw units.
     for unit in state.game.units.iter() {
