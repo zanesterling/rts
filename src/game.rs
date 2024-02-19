@@ -1,5 +1,5 @@
 use crate::sprite_sheet::SpriteKey;
-use crate::units::WorldPoint;
+use crate::units::{WorldCoord, WorldPoint};
 
 pub const TILE_WIDTH: u32 = 64;
 
@@ -12,11 +12,12 @@ impl State {
   pub fn new() -> State {
     let o = GridTile::Empty;
     let l = GridTile::Obstacle;
+    let newt = "newt_gingrich".to_string();
     State {
       units: vec![
-        Unit::new(300., 200., "newt_gingrich".to_string()),
-        Unit::new(350., 300., "newt_gingrich".to_string()),
-        Unit::new(450., 230., "newt_gingrich".to_string()),
+        Unit::new(WorldCoord(300.), WorldCoord(200.), newt.clone()),
+        Unit::new(WorldCoord(350.), WorldCoord(300.), newt.clone()),
+        Unit::new(WorldCoord(450.), WorldCoord(230.), newt.clone()),
       ],
 
       map: Map {
@@ -41,14 +42,14 @@ impl State {
   pub fn tick(&mut self) {
     for unit in self.units.iter_mut() {
       if let Some(target) = &unit.move_target {
-        let to_target = target.minus(unit.pos);
+        let to_target = *target - unit.pos;
         let speed = unit.speed();
         if to_target.magnitude() < speed {
           unit.pos = *target;
           unit.move_target = None;
         } else {
-          let vel = to_target.normalized().scaled(unit.speed());
-          unit.pos = unit.pos.plus(vel);
+          let vel = to_target.normalized() * speed;
+          unit.pos = unit.pos + vel;
         }
       }
     }
@@ -59,22 +60,22 @@ pub struct Unit {
   pub pos: WorldPoint,
   pub selected: bool,
   pub move_target: Option<WorldPoint>,
-  pub base_speed: f32,
+  pub base_speed: WorldCoord,
   pub sprite_key: SpriteKey,
 }
 
 impl Unit {
-  pub fn new(x: f32, y: f32, sprite_key: SpriteKey) -> Unit {
+  pub fn new(x: WorldCoord, y: WorldCoord, sprite_key: SpriteKey) -> Unit {
     Unit {
       pos: WorldPoint::new(x, y),
       selected: false,
       move_target: None,
-      base_speed: 1.,
+      base_speed: WorldCoord(1.),
       sprite_key,
     }
   }
 
-  pub fn speed(&self) -> f32 { self.base_speed }
+  pub fn speed(&self) -> WorldCoord { self.base_speed }
 }
 
 pub struct Map {
@@ -142,4 +143,12 @@ impl Iterator for MapTileIterator<'_> {
 pub enum GridTile {
   Empty,
   Obstacle,
+}
+
+// Converts tile coordinates to world coordinates.
+pub fn tile_pos(x: u32, y: u32) -> WorldPoint {
+  WorldPoint {
+    x: WorldCoord((x * TILE_WIDTH) as f32),
+    y: WorldCoord((y * TILE_WIDTH) as f32),
+  }
 }

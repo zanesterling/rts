@@ -20,11 +20,12 @@ use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
 
-use crate::game::{GridTile, TILE_WIDTH};
+use crate::game::{GridTile, TILE_WIDTH, tile_pos};
 use crate::sprite_sheet::SpriteSheet;
-use crate::units::WorldPoint;
+use crate::units::{WorldCoord, WorldPoint, ScreenCoord, ScreenPoint};
 
-const OBJ_RAD: f32 = 16.;
+const OBJ_RAD: WorldCoord = WorldCoord(16.);
+const OBJ_DIAM: WorldCoord = WorldCoord(2. * OBJ_RAD.0);
 
 const EMPTY_TILE_COLOR: Color = Color::RGB(40, 42, 54);
 const OBSTACLE_COLOR: Color = Color::RGB(255, 184, 108);
@@ -43,30 +44,32 @@ struct State<'a> {
     camera_pos: WorldPoint,
 }
 
+#[derive(Clone, Copy)]
 enum DragState {
     None,
     BoxSelect(BoxSelect),
     CameraDrag,
 }
 
+#[derive(Clone, Copy)]
 struct BoxSelect {
-    from_x: i32,
-    from_y: i32,
-    to_x: i32,
-    to_y: i32,
+    from: WorldPoint,
+    to: WorldPoint,
 }
 
 impl BoxSelect {
-    fn resolve(&self, final_x: i32, final_y: i32, game: &mut game::State) {
+    fn resolve(&self, final_pt: ScreenPoint, state: &mut State) {
         let rect = rect_from_points(
-            self.from_x, self.from_y, final_x, final_y);
-        for unit in game.units.iter_mut() {
+            self.from.to_screen(state.camera_pos), final_pt);
+        for unit in state.game.units.iter_mut() {
+            let top_left = unit.pos - WorldPoint::new(OBJ_RAD, OBJ_RAD);
+            let top_left_screen = top_left.to_screen(state.camera_pos);
             unit.selected = rect.has_intersection(
                 Rect::new(
-                    (unit.pos.x - OBJ_RAD) as i32,
-                    (unit.pos.y - OBJ_RAD) as i32,
-                    (OBJ_RAD * 2.) as u32,
-                    (OBJ_RAD * 2.) as u32
+                    top_left_screen.x.0,
+                    top_left_screen.y.0,
+                    (OBJ_RAD.0 * 2.) as u32,
+                    (OBJ_RAD.0 * 2.) as u32
                 )
             );
         }
@@ -102,7 +105,7 @@ fn main() {
         game: game::State::new(),
         drag_state: DragState::None,
         sprite_sheet: sprite_sheet,
-        camera_pos: WorldPoint::new(0., 0.),
+        camera_pos: WorldPoint::new(WorldCoord(0.), WorldCoord(0.)),
     };
     render(&mut canvas, &state);
     canvas.present();
@@ -137,27 +140,30 @@ fn handle_event(state: &mut State, event: Event) {
 
         // Left mouse down / up: box select.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Left, ..} => {
+            let scr_click = ScreenPoint{x: ScreenCoord(x), y: ScreenCoord(y)};
+            let from = scr_click.to_world(state.camera_pos);
             state.drag_state = DragState::BoxSelect(BoxSelect {
-                from_x: x,
-                from_y: y,
-                to_x: x,
-                to_y: y,
+                from,
+                to: from,
             });
         },
         Event::MouseButtonUp {x, y, mouse_btn: MouseButton::Left, ..} => {
             // Select units that are in the box.
-            if let DragState::BoxSelect(box_select) = &state.drag_state {
-                box_select.resolve(x, y, &mut state.game);
+            if let DragState::BoxSelect(box_select) = state.drag_state {
+                let (x, y) = (ScreenCoord(x), ScreenCoord(y));
+                box_select.resolve(ScreenPoint{x, y}, state);
             }
             state.drag_state = DragState::None;
         },
 
         // Right mouse button -- issue move command.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Right, ..} => {
+            let (x, y) = (ScreenCoord(x), ScreenCoord(y));
+            let click_pos = ScreenPoint{x, y}
+                .to_world(state.camera_pos);
             for unit in state.game.units.iter_mut() {
                 if unit.selected {
-                    unit.move_target = Some(
-                        WorldPoint::new(x as f32, y as f32));
+                    unit.move_target = Some(click_pos);
                 }
             }
         },
@@ -165,8 +171,9 @@ fn handle_event(state: &mut State, event: Event) {
         // Middle mouse down/up: drag view.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Middle, .. } => {
             // End box-select if you middle mouse click-n-drag.
-            if let DragState::BoxSelect(box_select) = &state.drag_state {
-                box_select.resolve(x, y, &mut state.game);
+            if let DragState::BoxSelect(box_select) = state.drag_state {
+                let (x, y) = (ScreenCoord(x), ScreenCoord(y));
+                box_select.resolve(ScreenPoint{x, y}, state);
             }
             state.drag_state = DragState::CameraDrag;
         },
@@ -179,12 +186,16 @@ fn handle_event(state: &mut State, event: Event) {
         Event::MouseMotion {x, y, xrel, yrel, ..} => {
             match &mut state.drag_state {
                 DragState::BoxSelect(box_select) => {
-                    box_select.to_x = x;
-                    box_select.to_y = y;
+                    box_select.to = ScreenPoint {
+                        x: ScreenCoord(x),
+                        y: ScreenCoord(y),
+                    }.to_world(state.camera_pos);
                 },
                 DragState::CameraDrag => {
-                    state.camera_pos.x -= xrel as f32;
-                    state.camera_pos.y -= yrel as f32;
+                    state.camera_pos -= WorldPoint {
+                        x: WorldCoord(xrel as f32),
+                        y: WorldCoord(yrel as f32),
+                    };
                 },
                 DragState::None => {},
             }
@@ -204,20 +215,21 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
             GridTile::Empty => EMPTY_TILE_COLOR,
             GridTile::Obstacle => OBSTACLE_COLOR,
         });
-        let wind_x = (tile.x * TILE_WIDTH) as i32 - state.camera_pos.x as i32;
-        let wind_y = (tile.y * TILE_WIDTH) as i32 - state.camera_pos.y as i32;
+        let window_pos = tile_pos(tile.x, tile.y).to_screen(state.camera_pos);
         let _ = canvas.fill_rect(
-            Rect::new(wind_x, wind_y, TILE_WIDTH, TILE_WIDTH));
+            Rect::new(
+                window_pos.x.0, window_pos.y.0,
+                TILE_WIDTH, TILE_WIDTH));
     }
 
     // Draw units.
     for unit in state.game.units.iter() {
         let rad = OBJ_RAD;
-        let wind_x = (unit.pos.x - rad - state.camera_pos.x) as i32;
-        let wind_y = (unit.pos.y - rad - state.camera_pos.y) as i32;
+        let top_left = unit.pos - WorldPoint::new(rad, rad);
+        let top_left_scr = top_left.to_screen(state.camera_pos);
         let dst = Rect::new(
-            wind_x, wind_y,
-            (2.*rad) as u32, (2.*rad) as u32
+            top_left_scr.x.0, top_left_scr.y.0,
+            OBJ_DIAM.0 as u32, OBJ_DIAM.0 as u32
         );
 
         // Draw unit.
@@ -237,17 +249,17 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     if let DragState::BoxSelect(box_select) = &state.drag_state {
         canvas.set_draw_color(DRAG_PERIMETER_COLOR);
         let _ = canvas.draw_rect(rect_from_points(
-            box_select.from_x, box_select.from_y,
-            box_select.to_x, box_select.to_y,
+            box_select.from.to_screen(state.camera_pos),
+            box_select.to.to_screen(state.camera_pos),
         ));
     }
 }
 
-fn rect_from_points(x1: i32, y1: i32, x2: i32, y2: i32) -> Rect {
-    let xmin = i32::min(x1, x2);
-    let xmax = i32::max(x1, x2);
-    let ymin = i32::min(y1, y2);
-    let ymax = i32::max(y1, y2);
+fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
+    let xmin = i32::min(p1.x.0, p2.x.0);
+    let xmax = i32::max(p1.x.0, p2.x.0);
+    let ymin = i32::min(p1.y.0, p2.y.0);
+    let ymax = i32::max(p1.y.0, p2.y.0);
     Rect::new(
         xmin, ymin,
         (xmax-xmin) as u32, (ymax-ymin) as u32)
