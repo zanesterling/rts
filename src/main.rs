@@ -2,6 +2,7 @@
 mod game;
 #[allow(dead_code)]
 mod sprite_sheet;
+mod units;
 
 extern crate sdl2;
 
@@ -19,8 +20,9 @@ use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
 
-use game::{GridTile, Point, TILE_WIDTH};
-use sprite_sheet::SpriteSheet;
+use crate::game::{GridTile, TILE_WIDTH};
+use crate::sprite_sheet::SpriteSheet;
+use crate::units::WorldPoint;
 
 const OBJ_RAD: f32 = 16.;
 
@@ -38,7 +40,7 @@ struct State<'a> {
     game: game::State,
     drag_state: DragState,
     sprite_sheet: SpriteSheet<'a>,
-    camera_pos: Point,
+    camera_pos: WorldPoint,
 }
 
 enum DragState {
@@ -100,7 +102,7 @@ fn main() {
         game: game::State::new(),
         drag_state: DragState::None,
         sprite_sheet: sprite_sheet,
-        camera_pos: Point::new(0., 0.),
+        camera_pos: WorldPoint::new(0., 0.),
     };
     render(&mut canvas, &state);
     canvas.present();
@@ -155,7 +157,7 @@ fn handle_event(state: &mut State, event: Event) {
             for unit in state.game.units.iter_mut() {
                 if unit.selected {
                     unit.move_target = Some(
-                        game::Point::new(x as f32, y as f32));
+                        WorldPoint::new(x as f32, y as f32));
                 }
             }
         },
