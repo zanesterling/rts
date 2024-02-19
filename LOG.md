@@ -10,6 +10,14 @@ the unit selection doesn't work right if your camera is offset. Must fix!
 Probably I should introduce separate world / camera / screen coords, and
 have explicit transforms between them.
 
+---
+
+Fixed the bug by separating camera and world coordinates. Now the only easy way
+to convert between them is with `.to_screen(camera)` and `.to_world(camera)`,
+which do the appropriate transformations.
+
+Thinking in coordinate spaces is fun :-)
+
 ## 2024-02-18
 Today I want to swap out the rendering of units to use sprites from the sprite
 sheet.
