@@ -3,6 +3,13 @@
 ## 2024-02-19
 Today I'll make some obstacles, and have the units bump into them.
 
+---
+
+I've got the map rendering, but no collision yet. I just found a bug:
+the unit selection doesn't work right if your camera is offset. Must fix!
+Probably I should introduce separate world / camera / screen coords, and
+have explicit transforms between them.
+
 ## 2024-02-18
 Today I want to swap out the rendering of units to use sprites from the sprite
 sheet.
