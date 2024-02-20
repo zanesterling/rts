@@ -113,10 +113,3 @@ impl ScreenPoint {
     } + camera
   }
 }
-
-
-pub struct WorldRect {
-}
-
-impl WorldRect {
-}
