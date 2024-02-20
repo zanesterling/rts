@@ -58,7 +58,7 @@ Let's try loading and rendering sprites in place of the units today.
 
 ## 2024-02-13
 Written the morning after.
- 
+
 I achieved what I intended. There are a few units and I can box select and even
 tell them to move.
 
@@ -78,7 +78,7 @@ through a few hoops.
 
 First, `apt` only had `libsdl2-2.0-0` up to version `2.0.10`. To get around the
 issue I had to use the "bundled" feature of `rust-sdl2`, as suggested [in their
-README](https://github.com/Rust-SDL2/rust-sdl2?tab=readme-ov-file#bundled-feature).  
+README](https://github.com/Rust-SDL2/rust-sdl2?tab=readme-ov-file#bundled-feature).
 Once I fixed that I could build successfully. I still get the following
 warnings, which I'll look into at some point.
 
