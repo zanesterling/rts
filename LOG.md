@@ -11,6 +11,11 @@ Tonight I'm gonna make collision with the walls. The steps are:
 So far I've done #1, but there's a little bug. I didn't account for how the
 units have a radius, so they move until their midpoint touches the wall. Fix!
 
+---
+
+Ooh, actually this is nontrivial in the general case. The issue is: which cell
+do you check for collision with the circle?
+
 ## 2024-02-19
 Today I'll make some obstacles, and have the units bump into them.
 
