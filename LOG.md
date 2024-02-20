@@ -1,5 +1,16 @@
 # Development log
 
+## 2024-02-20
+Tonight I'm gonna make collision with the walls. The steps are:
+1. If you would move into a wall, don't move.
+2. If you would move into a wall, move to touch it.
+3. If you would move into a wall, move to touch it, then slide along it at a
+   speed proportional to the component of your velocity that's parallel to the
+   wall.
+
+So far I've done #1, but there's a little bug. I didn't account for how the
+units have a radius, so they move until their midpoint touches the wall. Fix!
+
 ## 2024-02-19
 Today I'll make some obstacles, and have the units bump into them.
 
