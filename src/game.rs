@@ -41,16 +41,22 @@ impl State {
 
   pub fn tick(&mut self) {
     for unit in self.units.iter_mut() {
+      // If the unit is moving, move it.
       if let Some(target) = &unit.move_target {
         let to_target = *target - unit.pos;
         let speed = unit.speed();
-        if to_target.magnitude() < speed {
-          unit.pos = *target;
-          unit.move_target = None;
+        let (next_pos, is_last_step) = if to_target.magnitude() < speed {
+          (*target, true)
         } else {
-          let vel = to_target.normalized() * speed;
-          unit.pos = unit.pos + vel;
+          (unit.pos + to_target.normalized()*speed, false)
+        };
+
+        if let Some(GridTile::Empty) = self.map.get_tile_at(next_pos) {
+          unit.pos = next_pos;
+        } else {
+          // TODO: Step up to the wall, but not through it.
         }
+        if is_last_step { unit.move_target = None; }
       }
     }
   }
@@ -104,6 +110,14 @@ impl Map {
       y: 0,
       map: self,
     }
+  }
+
+  pub fn get_tile_at(&self, point: WorldPoint) -> Option<GridTile> {
+    let (WorldCoord(px), WorldCoord(py)) = (point.x, point.y);
+    if px < 0. || py < 0. { return None }
+    let x = px as u32 / TILE_WIDTH;
+    let y = py as u32 / TILE_WIDTH;
+    self.get_tile(x, y)
   }
 }
 
