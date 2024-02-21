@@ -2,6 +2,7 @@ use crate::sprite_sheet::SpriteKey;
 use crate::units::{
   WorldCoord as Coord,
   WorldPoint as Point,
+  WorldRect as Rect,
 };
 
 pub const TILE_WIDTH: u32 = 64;
@@ -52,7 +53,7 @@ impl State {
           (unit.pos + to_target.normalized()*speed, false)
         };
 
-        let tiles: Vec<_> = self.map.tiles_in_rect(unit.bounding_box_at(next_pos)).collect();
+        let tiles: Vec<_> = self.map.tiles_overlapping_rect(unit.bounding_box_at(next_pos)).collect();
         let collision = tiles.iter()
           .any(|item| item.tile == GridTile::Obstacle);
         if collision {
@@ -139,22 +140,17 @@ impl Map {
     }
   }
 
-  pub fn tiles_in_rect<'a>(&'a self, rect: Rect) -> MapTileRectIterator<'a> {
+  pub fn tiles_overlapping_rect<'a>(&'a self, rect: Rect) -> MapTileRectIterator<'a> {
     let bounds = self.bounds();
+    if !bounds.intersects(&rect) {
+      return MapTileRectIterator::empty(&self);
+    }
+    let top_left  = rect.top_left.clamp(&bounds);
+    let bot_right = rect.top_left + Point::new(rect.width, rect.height);
     let (top_left_x, top_left_y) =
-      self.tile_coords_at_unchecked(Point::new(
-        rect.top_left.x.clamp(
-          bounds.top_left.x, bounds.top_left.x + bounds.width),
-        rect.top_left.y.clamp(
-          bounds.top_left.y, bounds.top_left.y + bounds.height),
-      ));
+      self.tile_coords_at_unchecked(top_left.clamp(&bounds));
     let (bot_right_x, bot_right_y) =
-      self.tile_coords_at_unchecked(Point::new(
-        (rect.top_left.x + rect.width).clamp(
-          bounds.top_left.x, bounds.top_left.x + bounds.width),
-        (rect.top_left.y + rect.width).clamp(
-          bounds.top_left.y, bounds.top_left.y + bounds.height),
-      ));
+      self.tile_coords_at_unchecked(bot_right.clamp(&bounds));
 
     MapTileRectIterator {
       next_x: top_left_x,
@@ -243,13 +239,33 @@ pub struct MapTileRectIterator<'a> {
   top_left_y: u32,
   
   // Width and height of the rect.
-  // This iterator outputs tiles in [top_left_x, top_left_x + width).
+  // This iterator outputs tiles in [top_left_x, top_left_x + width].
   // Corresponding for y axis.
   //
   // Struct creators must observe these constraints:
   width: u32,  // top_left_x + width  <= map.width
   height: u32, // top_left_y + height <= map.height
   map: &'a Map,
+}
+
+impl<'a> MapTileRectIterator<'a> {
+  // An iterator which produces no tiles.
+  pub fn empty(map: &'a Map) -> MapTileRectIterator<'a> {
+    MapTileRectIterator {
+      // If we set the target rect to be empty...
+      top_left_x: 0,
+      top_left_y: 0,
+      width: 0,
+      height: 0,
+
+      // ...and the next point to be well outside the target,
+      // then the iterator should immediately terminate.
+      next_x: 10,
+      next_y: 10,
+
+      map,
+    }
+  }
 }
 
 impl Iterator for MapTileRectIterator<'_> {
@@ -285,11 +301,4 @@ pub fn tile_pos(x: u32, y: u32) -> Point {
     x: Coord((x * TILE_WIDTH) as f32),
     y: Coord((y * TILE_WIDTH) as f32),
   }
-}
-
-#[derive(Debug)]
-pub struct Rect {
-  pub top_left: Point,
-  pub width: Coord,
-  pub height: Coord,
 }

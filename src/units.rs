@@ -71,6 +71,14 @@ impl WorldPoint {
       y: ScreenCoord((offset.y.0 * PIXELS_PER_WORLD) as i32),
     }
   }
+
+  // Clamps point p to the rectangle.
+  pub fn clamp(self, r: &WorldRect) -> WorldPoint {
+    WorldPoint {
+      x: self.x.clamp(r.top_left.x, r.top_left.x + r.width),
+      y: self.y.clamp(r.top_left.y, r.top_left.y + r.height),
+    }
+  }
 }
 
 impl Add for WorldPoint {
@@ -117,5 +125,39 @@ impl ScreenPoint {
       x: WorldCoord(self.x.0 as f32 / PIXELS_PER_WORLD),
       y: WorldCoord(self.y.0 as f32 / PIXELS_PER_WORLD),
     } + camera
+  }
+}
+
+#[derive(Debug)]
+pub struct WorldRect {
+  pub top_left: WorldPoint,
+  pub width:    WorldCoord,
+  pub height:   WorldCoord,
+}
+
+impl WorldRect {
+  pub fn contains(&self, p: WorldPoint) -> bool {
+    self.top_left.x <= p.x &&
+    p.x <= self.top_left.x + self.width &&
+    self.top_left.y <= p.y &&
+    p.y <= self.top_left.y + self.height
+  }
+
+  pub fn intersects(&self, other: &WorldRect) -> bool {
+    let (p1, p2, p3, p4) = self.points();
+    let (q1, q2, q3, q4) = other.points();
+    other.contains(p1) || other.contains(p2) ||
+    other.contains(p3) || other.contains(p4) ||
+    self.contains(q1) || self.contains(q2) ||
+    self.contains(q3) || self.contains(q4)
+  }
+
+  fn points(&self) -> (WorldPoint, WorldPoint, WorldPoint, WorldPoint) {
+    (
+      self.top_left,
+      self.top_left + WorldPoint::new(self.width,     WorldCoord(0.)),
+      self.top_left + WorldPoint::new(WorldCoord(0.), self.height),
+      self.top_left + WorldPoint::new(self.width,     self.height),
+    )
   }
 }
