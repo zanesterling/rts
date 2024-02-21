@@ -87,6 +87,15 @@ impl Unit {
   }
 
   pub fn speed(&self) -> Coord { self.base_speed }
+
+  fn bounding_box(&self) -> Rect {
+    let top_left  = self.pos - Point::new(self.rad, self.rad);
+    Rect {
+      top_left,
+      width:  self.rad*Coord(2.),
+      height: self.rad*Coord(2.),
+    }
+  }
 }
 
 pub struct Map {
@@ -97,6 +106,17 @@ pub struct Map {
   pub grid_tiles: Vec<GridTile>,
 }
 
+// A tile is square with side length L:
+//
+// p1--p2
+// |    |
+// p3--p4
+//
+// The tile at tile coordinates (0,0) has p1 = (0,0), p4 = (L-ε, L-ε).
+//
+// Yes okay fine, to you mathematicians out there: p2, p3, and p4 are not
+// actually in the tile. The tile is left- and up- inclusive and right-
+// and down- exclusive.
 impl Map {
   pub fn get_tile(&self, x: u32, y: u32) -> Option<GridTile> {
     if self.width <= x || self.height <= y { return None }
@@ -117,12 +137,64 @@ impl Map {
     }
   }
 
-  pub fn get_tile_at(&self, point: Point) -> Option<GridTile> {
+  pub fn tiles_in_rect<'a>(&'a self, rect: Rect) -> MapTileRectIterator<'a> {
+    let bounds = self.bounds();
+    let (top_left_x, top_left_y) =
+      self.tile_coords_at_unchecked(Point::new(
+        rect.top_left.x.clamp(
+          bounds.top_left.x, bounds.top_left.x + bounds.width),
+        rect.top_left.y.clamp(
+          bounds.top_left.y, bounds.top_left.y + bounds.height),
+      ));
+    let (bot_right_x, bot_right_y) =
+      self.tile_coords_at_unchecked(Point::new(
+        (rect.top_left.x + rect.width).clamp(
+          bounds.top_left.x, bounds.top_left.x + bounds.width),
+        (rect.top_left.y + rect.width).clamp(
+          bounds.top_left.y, bounds.top_left.y + bounds.height),
+      ));
+
+    MapTileRectIterator {
+      next_x: top_left_x,
+      next_y: top_left_y,
+
+      top_left_x,
+      top_left_y,
+      width:  bot_right_x - top_left_x,
+      height: bot_right_y - bot_right_y,
+      map: &self,
+    }
+  }
+
+  fn bounds(&self) -> Rect {
+    Rect {
+      top_left: Point::new(Coord(0.), Coord(0.)),
+      width:  Coord((self.width  * TILE_WIDTH) as f32),
+      height: Coord((self.height * TILE_WIDTH) as f32),
+    }
+  }
+
+  // Returns (x, y), a tuple with the coordinates of the tile at this point.
+  // May return None if the point is out of bounds.
+  fn tile_coords_at(&self, point: Point) -> Option<(u32, u32)> {
     let (Coord(px), Coord(py)) = (point.x, point.y);
     if px < 0. || py < 0. { return None }
     let x = px as u32 / TILE_WIDTH;
     let y = py as u32 / TILE_WIDTH;
-    self.get_tile(x, y)
+    Some((x, y))
+  }
+
+  fn tile_coords_at_unchecked(&self, point: Point) -> (u32, u32) {
+    let (Coord(px), Coord(py)) = (point.x, point.y);
+    let x = px as u32 / TILE_WIDTH;
+    let y = py as u32 / TILE_WIDTH;
+    (x, y)
+  }
+
+  pub fn get_tile_at(&self, point: Point) -> Option<GridTile> {
+    self.tile_coords_at(point)
+      .map(|(x, y)| self.get_tile(x, y))
+      .flatten()
   }
 }
 
@@ -158,6 +230,47 @@ impl Iterator for MapTileIterator<'_> {
   }
 }
 
+pub struct MapTileRectIterator<'a> {
+  // x,y pointer to the next tile.
+  next_x: u32,
+  next_y: u32,
+
+  // Tile coordinates of the top-left point of the rect
+  // that we're iterating through.
+  top_left_x: u32,
+  top_left_y: u32,
+  
+  // Width and height of the rect.
+  // This iterator outputs tiles in [top_left_x, top_left_x + width).
+  // Corresponding for y axis.
+  //
+  // Struct creators must observe these constraints:
+  width: u32,  // top_left_x + width  <= map.width
+  height: u32, // top_left_y + height <= map.height
+  map: &'a Map,
+}
+
+impl Iterator for MapTileRectIterator<'_> {
+  type Item = MapTileIteratorItem;
+
+  fn next(&mut self) -> Option<MapTileIteratorItem> {
+    if self.next_y >= self.height { return None }
+    let tile = MapTileIteratorItem {
+      x: self.next_x,
+      y: self.next_y,
+      tile: self.map.get_tile_unchecked(self.next_x, self.next_y),
+    };
+
+    self.next_x += 1;
+    if self.next_x >= self.top_left_x + self.width {
+      self.next_x = self.top_left_x;
+      self.next_y += 1;
+    }
+
+    Some(tile)
+  }
+}
+
 #[derive(Clone, Copy)]
 pub enum GridTile {
   Empty,
@@ -170,4 +283,10 @@ pub fn tile_pos(x: u32, y: u32) -> Point {
     x: Coord((x * TILE_WIDTH) as f32),
     y: Coord((y * TILE_WIDTH) as f32),
   }
+}
+
+pub struct Rect {
+  pub top_left: Point,
+  pub width: Coord,
+  pub height: Coord,
 }

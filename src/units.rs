@@ -36,6 +36,12 @@ impl PartialOrd for WorldCoord {
   }
 }
 
+impl WorldCoord {
+  pub fn clamp(self, lower: WorldCoord, upper: WorldCoord) -> WorldCoord {
+    WorldCoord(self.0.clamp(lower.0, upper.0))
+  }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct ScreenCoord(pub i32);
 
