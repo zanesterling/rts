@@ -1,5 +1,8 @@
 use crate::sprite_sheet::SpriteKey;
-use crate::units::{WorldCoord, WorldPoint};
+use crate::units::{
+  WC as WC,
+  WorldPoint,
+};
 
 pub const TILE_WIDTH: u32 = 64;
 
@@ -15,9 +18,9 @@ impl State {
     let newt = "newt_gingrich".to_string();
     State {
       units: vec![
-        Unit::new(WorldCoord(300.), WorldCoord(200.), newt.clone()),
-        Unit::new(WorldCoord(350.), WorldCoord(300.), newt.clone()),
-        Unit::new(WorldCoord(450.), WorldCoord(230.), newt.clone()),
+        Unit::new(WC(300.), WC(200.), newt.clone()),
+        Unit::new(WC(350.), WC(300.), newt.clone()),
+        Unit::new(WC(450.), WC(230.), newt.clone()),
       ],
 
       map: Map {
@@ -64,24 +67,25 @@ impl State {
 
 pub struct Unit {
   pub pos: WorldPoint,
+  pub rad: WC,
   pub selected: bool,
   pub move_target: Option<WorldPoint>,
-  pub base_speed: WorldCoord,
+  pub base_speed: WC,
   pub sprite_key: SpriteKey,
 }
 
 impl Unit {
-  pub fn new(x: WorldCoord, y: WorldCoord, sprite_key: SpriteKey) -> Unit {
+  pub fn new(x: WC, y: WC, sprite_key: SpriteKey) -> Unit {
     Unit {
       pos: WorldPoint::new(x, y),
       selected: false,
       move_target: None,
-      base_speed: WorldCoord(1.),
+      base_speed: WC(1.),
       sprite_key,
     }
   }
 
-  pub fn speed(&self) -> WorldCoord { self.base_speed }
+  pub fn speed(&self) -> WC { self.base_speed }
 }
 
 pub struct Map {
@@ -113,7 +117,7 @@ impl Map {
   }
 
   pub fn get_tile_at(&self, point: WorldPoint) -> Option<GridTile> {
-    let (WorldCoord(px), WorldCoord(py)) = (point.x, point.y);
+    let (WC(px), WC(py)) = (point.x, point.y);
     if px < 0. || py < 0. { return None }
     let x = px as u32 / TILE_WIDTH;
     let y = py as u32 / TILE_WIDTH;
@@ -162,7 +166,7 @@ pub enum GridTile {
 // Converts tile coordinates to world coordinates.
 pub fn tile_pos(x: u32, y: u32) -> WorldPoint {
   WorldPoint {
-    x: WorldCoord((x * TILE_WIDTH) as f32),
-    y: WorldCoord((y * TILE_WIDTH) as f32),
+    x: WC((x * TILE_WIDTH) as f32),
+    y: WC((y * TILE_WIDTH) as f32),
   }
 }
