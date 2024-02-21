@@ -18,9 +18,7 @@ impl State {
     let newt = "newt_gingrich".to_string();
     State {
       units: vec![
-        Unit::new(Coord(300.), Coord(200.), Coord(16.), newt.clone()),
-        Unit::new(Coord(350.), Coord(300.), Coord(16.), newt.clone()),
-        Unit::new(Coord(450.), Coord(230.), Coord(16.), newt.clone()),
+        Unit::new(Coord(300.), Coord(250.), Coord(16.), newt.clone()),
       ],
 
       map: Map {
@@ -54,10 +52,13 @@ impl State {
           (unit.pos + to_target.normalized()*speed, false)
         };
 
-        if let Some(GridTile::Empty) = self.map.get_tile_at(next_pos) {
-          unit.pos = next_pos;
-        } else {
+        let tiles: Vec<_> = self.map.tiles_in_rect(unit.bounding_box_at(next_pos)).collect();
+        let collision = tiles.iter()
+          .any(|item| item.tile == GridTile::Obstacle);
+        if collision {
           // TODO: Step up to the wall, but not through it.
+        } else {
+          unit.pos = next_pos;
         }
         if is_last_step { unit.move_target = None; }
       }
@@ -88,8 +89,9 @@ impl Unit {
 
   pub fn speed(&self) -> Coord { self.base_speed }
 
-  fn bounding_box(&self) -> Rect {
-    let top_left  = self.pos - Point::new(self.rad, self.rad);
+  fn bounding_box(&self) -> Rect { self.bounding_box_at(self.pos) }
+  fn bounding_box_at(&self, p: Point) -> Rect {
+    let top_left  = p - Point::new(self.rad, self.rad);
     Rect {
       top_left,
       width:  self.rad*Coord(2.),
@@ -160,8 +162,8 @@ impl Map {
 
       top_left_x,
       top_left_y,
-      width:  bot_right_x - top_left_x,
-      height: bot_right_y - bot_right_y,
+      width:  bot_right_x - top_left_x + 1,
+      height: bot_right_y - bot_right_y + 1,
       map: &self,
     }
   }
@@ -254,7 +256,7 @@ impl Iterator for MapTileRectIterator<'_> {
   type Item = MapTileIteratorItem;
 
   fn next(&mut self) -> Option<MapTileIteratorItem> {
-    if self.next_y >= self.height { return None }
+    if self.next_y >= self.top_left_y + self.height { return None }
     let tile = MapTileIteratorItem {
       x: self.next_x,
       y: self.next_y,
@@ -271,7 +273,7 @@ impl Iterator for MapTileRectIterator<'_> {
   }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum GridTile {
   Empty,
   Obstacle,
@@ -285,6 +287,7 @@ pub fn tile_pos(x: u32, y: u32) -> Point {
   }
 }
 
+#[derive(Debug)]
 pub struct Rect {
   pub top_left: Point,
   pub width: Coord,
