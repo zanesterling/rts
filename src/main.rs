@@ -24,9 +24,6 @@ use crate::game::{GridTile, TILE_WIDTH, tile_pos};
 use crate::sprite_sheet::SpriteSheet;
 use crate::units::{WorldCoord, WorldPoint, ScreenCoord, ScreenPoint};
 
-const OBJ_RAD: WorldCoord = WorldCoord(16.);
-const OBJ_DIAM: WorldCoord = WorldCoord(2. * OBJ_RAD.0);
-
 const EMPTY_TILE_COLOR: Color = Color::RGB(40, 42, 54);
 const OBSTACLE_COLOR: Color = Color::RGB(255, 184, 108);
 const UNIT_COLOR: Color = Color::RGB(255, 121, 198);
@@ -62,14 +59,15 @@ impl BoxSelect {
         let rect = rect_from_points(
             self.from.to_screen(state.camera_pos), final_pt);
         for unit in state.game.units.iter_mut() {
-            let top_left = unit.pos - WorldPoint::new(OBJ_RAD, OBJ_RAD);
+            let rad = unit.rad;
+            let top_left = unit.pos - WorldPoint::new(rad, rad);
             let top_left_screen = top_left.to_screen(state.camera_pos);
             unit.selected = rect.has_intersection(
                 Rect::new(
                     top_left_screen.x.0,
                     top_left_screen.y.0,
-                    (OBJ_RAD.0 * 2.) as u32,
-                    (OBJ_RAD.0 * 2.) as u32
+                    (rad.0 * 2.) as u32,
+                    (rad.0 * 2.) as u32
                 )
             );
         }
@@ -224,12 +222,13 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
 
     // Draw units.
     for unit in state.game.units.iter() {
-        let rad = OBJ_RAD;
+        let rad = unit.rad;
         let top_left = unit.pos - WorldPoint::new(rad, rad);
         let top_left_scr = top_left.to_screen(state.camera_pos);
+        let diam = unit.rad.0 * 2.;
         let dst = Rect::new(
             top_left_scr.x.0, top_left_scr.y.0,
-            OBJ_DIAM.0 as u32, OBJ_DIAM.0 as u32
+            diam as u32, diam as u32
         );
 
         // Draw unit.

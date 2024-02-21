@@ -1,6 +1,6 @@
 use crate::sprite_sheet::SpriteKey;
 use crate::units::{
-  WC as WC,
+  WorldCoord as WC,
   WorldPoint,
 };
 
@@ -18,9 +18,9 @@ impl State {
     let newt = "newt_gingrich".to_string();
     State {
       units: vec![
-        Unit::new(WC(300.), WC(200.), newt.clone()),
-        Unit::new(WC(350.), WC(300.), newt.clone()),
-        Unit::new(WC(450.), WC(230.), newt.clone()),
+        Unit::new(WC(300.), WC(200.), WC(16.), newt.clone()),
+        Unit::new(WC(350.), WC(300.), WC(16.), newt.clone()),
+        Unit::new(WC(450.), WC(230.), WC(16.), newt.clone()),
       ],
 
       map: Map {
@@ -75,9 +75,10 @@ pub struct Unit {
 }
 
 impl Unit {
-  pub fn new(x: WC, y: WC, sprite_key: SpriteKey) -> Unit {
+  pub fn new(x: WC, y: WC, rad: WC, sprite_key: SpriteKey) -> Unit {
     Unit {
       pos: WorldPoint::new(x, y),
+      rad,
       selected: false,
       move_target: None,
       base_speed: WC(1.),
