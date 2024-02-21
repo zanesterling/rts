@@ -145,12 +145,15 @@ impl Map {
     if !bounds.intersects(&rect) {
       return MapTileRectIterator::empty(&self);
     }
+
     let top_left  = rect.top_left.clamp(&bounds);
     let bot_right = rect.top_left + Point::new(rect.width, rect.height);
     let (top_left_x, top_left_y) =
       self.tile_coords_at_unchecked(top_left.clamp(&bounds));
     let (bot_right_x, bot_right_y) =
       self.tile_coords_at_unchecked(bot_right.clamp(&bounds));
+    let width  = bot_right_x - top_left_x + 1; // +1 to include the cur.
+    let height = bot_right_y - top_left_y + 1; // +1 to include the cur.
 
     MapTileRectIterator {
       next_x: top_left_x,
@@ -158,8 +161,8 @@ impl Map {
 
       top_left_x,
       top_left_y,
-      width:  bot_right_x - top_left_x + 1,
-      height: bot_right_y - bot_right_y + 1,
+      width,
+      height,
       map: &self,
     }
   }
