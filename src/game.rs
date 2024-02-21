@@ -1,7 +1,7 @@
 use crate::sprite_sheet::SpriteKey;
 use crate::units::{
-  WorldCoord as WC,
-  WorldPoint,
+  WorldCoord as Coord,
+  WorldPoint as Point,
 };
 
 pub const TILE_WIDTH: u32 = 64;
@@ -18,9 +18,9 @@ impl State {
     let newt = "newt_gingrich".to_string();
     State {
       units: vec![
-        Unit::new(WC(300.), WC(200.), WC(16.), newt.clone()),
-        Unit::new(WC(350.), WC(300.), WC(16.), newt.clone()),
-        Unit::new(WC(450.), WC(230.), WC(16.), newt.clone()),
+        Unit::new(Coord(300.), Coord(200.), Coord(16.), newt.clone()),
+        Unit::new(Coord(350.), Coord(300.), Coord(16.), newt.clone()),
+        Unit::new(Coord(450.), Coord(230.), Coord(16.), newt.clone()),
       ],
 
       map: Map {
@@ -66,27 +66,27 @@ impl State {
 }
 
 pub struct Unit {
-  pub pos: WorldPoint,
-  pub rad: WC,
+  pub pos: Point,
+  pub rad: Coord,
   pub selected: bool,
-  pub move_target: Option<WorldPoint>,
-  pub base_speed: WC,
+  pub move_target: Option<Point>,
+  pub base_speed: Coord,
   pub sprite_key: SpriteKey,
 }
 
 impl Unit {
-  pub fn new(x: WC, y: WC, rad: WC, sprite_key: SpriteKey) -> Unit {
+  pub fn new(x: Coord, y: Coord, rad: Coord, sprite_key: SpriteKey) -> Unit {
     Unit {
-      pos: WorldPoint::new(x, y),
+      pos: Point::new(x, y),
       rad,
       selected: false,
       move_target: None,
-      base_speed: WC(1.),
+      base_speed: Coord(1.),
       sprite_key,
     }
   }
 
-  pub fn speed(&self) -> WC { self.base_speed }
+  pub fn speed(&self) -> Coord { self.base_speed }
 }
 
 pub struct Map {
@@ -117,8 +117,8 @@ impl Map {
     }
   }
 
-  pub fn get_tile_at(&self, point: WorldPoint) -> Option<GridTile> {
-    let (WC(px), WC(py)) = (point.x, point.y);
+  pub fn get_tile_at(&self, point: Point) -> Option<GridTile> {
+    let (Coord(px), Coord(py)) = (point.x, point.y);
     if px < 0. || py < 0. { return None }
     let x = px as u32 / TILE_WIDTH;
     let y = py as u32 / TILE_WIDTH;
@@ -165,9 +165,9 @@ pub enum GridTile {
 }
 
 // Converts tile coordinates to world coordinates.
-pub fn tile_pos(x: u32, y: u32) -> WorldPoint {
-  WorldPoint {
-    x: WC((x * TILE_WIDTH) as f32),
-    y: WC((y * TILE_WIDTH) as f32),
+pub fn tile_pos(x: u32, y: u32) -> Point {
+  Point {
+    x: Coord((x * TILE_WIDTH) as f32),
+    y: Coord((y * TILE_WIDTH) as f32),
   }
 }
