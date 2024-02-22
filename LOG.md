@@ -1,5 +1,15 @@
 # Development log
 
+## 2024-02-22
+What can I do today? My brain is exTREMELY melty. Maybe I can find some nice
+code cleaning to do.
+
+---
+
+Okay I think my brain is really actually a puddle. I'm not going to try to do
+anything tonight, because I think it would come out my ears from pushing so
+hard.
+
 ## 2024-02-21
 The other night I fixed the bug with #1. My solution was to assume that the
 unit is square, and find all tiles overlapping it. Then I check if any is a
