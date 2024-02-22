@@ -1,5 +1,10 @@
 # Development log
 
+## 2024-02-21
+The other night I fixed the bug with #1. My solution was to assume that the
+unit is square, and find all tiles overlapping it. Then I check if any is a
+wall, and fail the move if so.
+
 ## 2024-02-20
 Tonight I'm gonna make collision with the walls. The steps are:
 1. If you would move into a wall, don't move.
