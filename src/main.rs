@@ -70,21 +70,31 @@ struct BoxSelect {
 }
 
 
-#[allow(dead_code)]
 struct InputState {
-    ctrl_down: bool,
-    shift_down: bool,
-    alt_down: bool,
+    left_ctrl_down: bool,
+    right_ctrl_down: bool,
+    left_shift_down: bool,
+    right_shift_down: bool,
+    left_alt_down: bool,
+    right_alt_down: bool,
 }
 
+#[allow(dead_code)]
 impl InputState {
     pub fn new() -> InputState {
         InputState {
-            ctrl_down: false,
-            shift_down: false,
-            alt_down: false,
+            left_ctrl_down: false,
+            right_ctrl_down: false,
+            left_shift_down: false,
+            right_shift_down: false,
+            left_alt_down: false,
+            right_alt_down: false,
         }
     }
+
+    pub fn ctrl(&self) -> bool { self.left_ctrl_down || self.right_ctrl_down }
+    pub fn shift(&self) -> bool { self.left_shift_down || self.right_shift_down }
+    pub fn alt(&self) -> bool { self.left_alt_down || self.right_alt_down }
 }
 
 impl BoxSelect {
@@ -229,31 +239,26 @@ fn handle_event(state: &mut State, event: Event) {
         },
 
         Event::KeyDown {repeat: false, keycode, ..} => {
+            let ist = &mut state.input_state;
             match keycode {
-                Some(Keycode::LCtrl) | Some(Keycode::RCtrl) => {
-                    state.input_state.ctrl_down = true;
-                },
-                Some(Keycode::LShift) | Some(Keycode::RShift) => {
-                    state.input_state.shift_down = true;
-                },
-                Some(Keycode::LAlt) | Some(Keycode::RAlt) => {
-                    state.input_state.alt_down = true;
-                },
+                Some(Keycode::LCtrl) => { ist.left_ctrl_down = true; }
+                Some(Keycode::RCtrl) => { ist.right_ctrl_down = true; }
+                Some(Keycode::LShift) => { ist.left_shift_down = true; }
+                Some(Keycode::RShift) => { ist.right_shift_down = true; }
+                Some(Keycode::LAlt) => { ist.left_alt_down = true; }
+                Some(Keycode::RAlt) => { ist.right_alt_down = true; }
                 _ => {},
             }
         },
         Event::KeyUp {keycode, ..} => {
-            println!("keyup: {:?}", event);
+            let ist = &mut state.input_state;
             match keycode {
-                Some(Keycode::LCtrl) | Some(Keycode::RCtrl) => {
-                    state.input_state.ctrl_down = false;
-                },
-                Some(Keycode::LShift) | Some(Keycode::RShift) => {
-                    state.input_state.shift_down = false;
-                },
-                Some(Keycode::LAlt) | Some(Keycode::RAlt) => {
-                    state.input_state.alt_down = false;
-                },
+                Some(Keycode::LCtrl) => { ist.left_ctrl_down = false; }
+                Some(Keycode::RCtrl) => { ist.right_ctrl_down = false; }
+                Some(Keycode::LShift) => { ist.left_shift_down = false; }
+                Some(Keycode::RShift) => { ist.right_shift_down = false; }
+                Some(Keycode::LAlt) => { ist.left_alt_down = false; }
+                Some(Keycode::RAlt) => { ist.right_alt_down = false; }
                 _ => {},
             }
         },
