@@ -193,14 +193,18 @@ fn handle_event(state: &mut State, event: Event) {
             state.drag_state = DragState::None;
         },
 
-        // Right mouse button -- issue move command.
+        // Right mouse button -- issue or queue move command.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Right, ..} => {
             let (x, y) = (ScreenCoord(x), ScreenCoord(y));
             let click_pos = ScreenPoint{x, y}
                 .to_world(state.camera_pos);
             for unit in state.game.units.iter_mut() {
                 if unit.selected {
-                    unit.move_to(click_pos);
+                    if state.input_state.shift() {
+                        unit.queue_move(click_pos);
+                    } else {
+                        unit.move_to(click_pos);
+                    }
                 }
             }
         },
