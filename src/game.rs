@@ -1,5 +1,5 @@
 use crate::sprite_sheet::SpriteKey;
-use crate::units::{
+use crate::dimensions::{
   WorldCoord as Coord,
   WorldPoint as Point,
   WorldRect as Rect,

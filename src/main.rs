@@ -2,7 +2,7 @@
 mod game;
 #[allow(dead_code)]
 mod sprite_sheet;
-mod units;
+mod dimensions;
 
 extern crate sdl2;
 
@@ -22,7 +22,7 @@ use std::time::Duration;
 
 use crate::game::{GridTile, TILE_WIDTH, tile_pos};
 use crate::sprite_sheet::SpriteSheet;
-use crate::units::{WorldCoord, WorldPoint, ScreenCoord, ScreenPoint};
+use crate::dimensions::{WorldCoord, WorldPoint, ScreenCoord, ScreenPoint};
 
 const EMPTY_TILE_COLOR: Color = Color::RGB(40, 42, 54);
 const OBSTACLE_COLOR: Color = Color::RGB(255, 184, 108);
