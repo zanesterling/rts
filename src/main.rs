@@ -32,6 +32,7 @@ const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
 
 const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
+const SHOW_UNIT_DEBUG_BOXES: bool = false;
 
 struct State<'a> {
     running: bool,
@@ -238,12 +239,14 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
             unit.sprite_key.as_str(), canvas, dst);
 
         // Draw debug box around the unit.
-        canvas.set_draw_color(
-            if unit.selected { UNIT_SELECTED_COLOR }
-            else if unit.move_target.is_some() { UNIT_MOVING_COLOR }
-            else { UNIT_COLOR }
-        );
-        let _ = canvas.draw_rect(dst);
+        if SHOW_UNIT_DEBUG_BOXES || unit.selected {
+            canvas.set_draw_color(
+                if unit.selected { UNIT_SELECTED_COLOR }
+                else if unit.move_target.is_some() { UNIT_MOVING_COLOR }
+                else { UNIT_COLOR }
+            );
+            let _ = canvas.draw_rect(dst);
+        }
     }
 
     // Draw box-selection box.
