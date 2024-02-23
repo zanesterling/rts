@@ -1,0 +1,15 @@
+- [ ] Unit movement
+	- [ ] waypoints
+	- [ ] shift-click to queue up movements
+	- [ ] pathfinding
+- [ ] Abilities!
+	- [ ] representation for abilities
+	- [ ] number-control interface
+	- [ ] display for abilities
+	- [ ] click interface
+- [ ] Structures
+	- [ ] building structures
+	- [ ] unit production
+	- [ ] research
+	- [ ] choosing active unit (set) out of selected
+- [ ] Resource gathering
