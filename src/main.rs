@@ -335,7 +335,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
 
 fn draw_waypoint(canvas: &mut Canvas<Window>, p: ScreenPoint) {
     canvas.set_draw_color(WAYPOINT_COLOR);
-    canvas.draw_rect(rect_from_point_rad(p, WAYPOINT_RAD));
+    let _ = canvas.draw_rect(rect_from_point_rad(p, WAYPOINT_RAD));
 }
 
 fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
