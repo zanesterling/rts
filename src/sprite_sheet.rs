@@ -16,8 +16,8 @@ pub struct SpriteSheet<'a> {
 }
 
 impl<'a> SpriteSheet<'a> {
-  pub fn from_file<'txc, P: AsRef<Path>>(
-    sprite_map_path: P,
+  pub fn from_file<'txc>(
+    sprite_map_path: &str,
     texture_creator: &'txc TextureCreator<WindowContext>
   ) -> Result<SpriteSheet<'txc>, String> {
     let mut sprite_map = vec![];
@@ -27,9 +27,10 @@ impl<'a> SpriteSheet<'a> {
 
     // Read the image_path from the map file, then load it and create a texture.
     let image_path = lines.next().ok_or("sprite sheet missing img path")?;
+    let parent_dir = Path::new(&sprite_map_path)
+      .parent().ok_or(format!("sprite sheet file has no parent dir"))?;
     let texture =
-      // TODO: handle directory-local scoping of paths
-      Surface::from_file(Path::new("media").join(image_path))?
+      Surface::from_file(parent_dir.join(image_path))?
         .as_texture(texture_creator)
         .map_err(|e| format!("err making texture: {:?}", e))?;
 
