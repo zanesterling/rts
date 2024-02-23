@@ -84,7 +84,9 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut canvas = window.into_canvas().build().unwrap();
+    let mut canvas = window.into_canvas()
+        .present_vsync()
+        .build().unwrap();
     let canvas_txc = canvas.texture_creator();
 
     let sprite_sheet =
