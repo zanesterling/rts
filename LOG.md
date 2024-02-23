@@ -1,5 +1,15 @@
 # Development log
 
+## 2024-02-23
+What is an improvement I can make to the game?
+
+- I could add pathfinding.
+- I could add waypoints and shift-click.
+- I could add production structures.
+- I could add VIOLENCE.
+
+Let's do waypoints first :-)
+
 ## 2024-02-22
 What can I do today? My brain is exTREMELY melty. Maybe I can find some nice
 code cleaning to do.
