@@ -40,6 +40,20 @@ struct State<'a> {
     drag_state: DragState,
     sprite_sheet: SpriteSheet<'a>,
     camera_pos: WorldPoint,
+    input_state: InputState,
+}
+
+impl<'a> State<'a> {
+    pub fn new<'s>(sprite_sheet: SpriteSheet<'s>) -> State<'s> {
+        State {
+            running: true,
+            game: game::State::new(),
+            drag_state: DragState::None,
+            sprite_sheet,
+            camera_pos: WorldPoint::new(WorldCoord(0.), WorldCoord(0.)),
+            input_state: InputState::new(),
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -53,6 +67,24 @@ enum DragState {
 struct BoxSelect {
     from: WorldPoint,
     to: WorldPoint,
+}
+
+
+#[allow(dead_code)]
+struct InputState {
+    ctrl_down: bool,
+    shift_down: bool,
+    alt_down: bool,
+}
+
+impl InputState {
+    pub fn new() -> InputState {
+        InputState {
+            ctrl_down: false,
+            shift_down: false,
+            alt_down: false,
+        }
+    }
 }
 
 impl BoxSelect {
@@ -101,13 +133,7 @@ fn main() {
                 exit(1);
             });
 
-    let state = State {
-        running: true,
-        game: game::State::new(),
-        drag_state: DragState::None,
-        sprite_sheet: sprite_sheet,
-        camera_pos: WorldPoint::new(WorldCoord(0.), WorldCoord(0.)),
-    };
+    let state = State::new(sprite_sheet);
     render(&mut canvas, &state);
     canvas.present();
     main_loop(state, canvas, sdl_context);
@@ -199,6 +225,36 @@ fn handle_event(state: &mut State, event: Event) {
                     };
                 },
                 DragState::None => {},
+            }
+        },
+
+        Event::KeyDown {repeat: false, keycode, ..} => {
+            match keycode {
+                Some(Keycode::LCtrl) | Some(Keycode::RCtrl) => {
+                    state.input_state.ctrl_down = true;
+                },
+                Some(Keycode::LShift) | Some(Keycode::RShift) => {
+                    state.input_state.shift_down = true;
+                },
+                Some(Keycode::LAlt) | Some(Keycode::RAlt) => {
+                    state.input_state.alt_down = true;
+                },
+                _ => {},
+            }
+        },
+        Event::KeyUp {keycode, ..} => {
+            println!("keyup: {:?}", event);
+            match keycode {
+                Some(Keycode::LCtrl) | Some(Keycode::RCtrl) => {
+                    state.input_state.ctrl_down = false;
+                },
+                Some(Keycode::LShift) | Some(Keycode::RShift) => {
+                    state.input_state.shift_down = false;
+                },
+                Some(Keycode::LAlt) | Some(Keycode::RAlt) => {
+                    state.input_state.alt_down = false;
+                },
+                _ => {},
             }
         },
 
