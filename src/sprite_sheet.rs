@@ -28,7 +28,7 @@ impl<'a> SpriteSheet<'a> {
     // Read the image_path from the map file, then load it and create a texture.
     let image_path = lines.next().ok_or("sprite sheet missing img path")?;
     let parent_dir = Path::new(&sprite_map_path)
-      .parent().ok_or(format!("sprite sheet file has no parent dir"))?;
+      .parent().ok_or(format!("sprite sheet file has no parent dir, so could not open the png file"))?;
     let texture =
       Surface::from_file(parent_dir.join(image_path))?
         .as_texture(texture_creator)
