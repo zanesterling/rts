@@ -164,7 +164,7 @@ fn handle_event(state: &mut State, event: Event) {
                 .to_world(state.camera_pos);
             for unit in state.game.units.iter_mut() {
                 if unit.selected {
-                    unit.move_target = Some(click_pos);
+                    unit.move_to(click_pos);
                 }
             }
         },
@@ -242,7 +242,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
         if SHOW_UNIT_DEBUG_BOXES || unit.selected {
             canvas.set_draw_color(
                 if unit.selected { UNIT_SELECTED_COLOR }
-                else if unit.move_target.is_some() { UNIT_MOVING_COLOR }
+                else if unit.move_queued() { UNIT_MOVING_COLOR }
                 else { UNIT_COLOR }
             );
             let _ = canvas.draw_rect(dst);

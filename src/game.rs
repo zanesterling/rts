@@ -44,7 +44,7 @@ impl State {
   pub fn tick(&mut self) {
     for unit in self.units.iter_mut() {
       // If the unit is moving, move it.
-      if let Some(target) = &unit.move_target {
+      if let Some(target) = unit.waypoints.first() {
         let to_target = *target - unit.pos;
         let speed = unit.speed();
         let (next_pos, is_last_step) = if to_target.magnitude() < speed {
@@ -61,7 +61,7 @@ impl State {
         } else {
           unit.pos = next_pos;
         }
-        if is_last_step { unit.move_target = None; }
+        if is_last_step { unit.waypoints.remove(0); } // TODO: use a queue for waypoints
       }
     }
   }
@@ -71,7 +71,7 @@ pub struct Unit {
   pub pos: Point,
   pub rad: Coord,
   pub selected: bool,
-  pub move_target: Option<Point>,
+  pub waypoints: Vec<Point>,
   pub base_speed: Coord,
   pub sprite_key: SpriteKey,
 }
@@ -82,7 +82,7 @@ impl Unit {
       pos: Point::new(x, y),
       rad,
       selected: false,
-      move_target: None,
+      waypoints: vec![],
       base_speed: Coord(1.),
       sprite_key,
     }
@@ -98,6 +98,19 @@ impl Unit {
       width:  self.rad*Coord(2.),
       height: self.rad*Coord(2.),
     }
+  }
+
+  pub fn move_to(&mut self, p: Point) {
+    self.waypoints.clear();
+    self.waypoints.push(p);
+  }
+
+  pub fn queue_move(&mut self, p: Point) {
+    self.waypoints.push(p);
+  }
+
+  pub fn move_queued(&self) -> bool {
+    self.waypoints.len() > 0
   }
 }
 
