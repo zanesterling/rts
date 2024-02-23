@@ -30,6 +30,9 @@ const UNIT_COLOR: Color = Color::RGB(255, 121, 198);
 const UNIT_SELECTED_COLOR: Color = Color::RGB(80, 250, 123);
 const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
+const WAYPOINT_COLOR: Color = UNIT_MOVING_COLOR;
+
+const WAYPOINT_RAD: i32 = 2;
 
 const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
 const SHOW_UNIT_DEBUG_BOXES: bool = false;
@@ -290,18 +293,24 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
 
     // Draw units.
     for unit in state.game.units.iter() {
+        if unit.selected {
+            for p in unit.waypoints.iter() {
+                draw_waypoint(canvas, p.to_screen(state.camera_pos));
+            }
+        }
+
         let rad = unit.rad;
         let top_left = unit.pos - WorldPoint::new(rad, rad);
         let top_left_scr = top_left.to_screen(state.camera_pos);
         let diam = unit.rad.0 * 2.;
-        let dst = Rect::new(
+        let bounds = Rect::new(
             top_left_scr.x.0, top_left_scr.y.0,
             diam as u32, diam as u32
         );
 
         // Draw unit.
         let _ = state.sprite_sheet.blit_sprite_to_rect(
-            unit.sprite_key.as_str(), canvas, dst);
+            unit.sprite_key.as_str(), canvas, bounds);
 
         // Draw debug box around the unit.
         if SHOW_UNIT_DEBUG_BOXES || unit.selected {
@@ -310,7 +319,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
                 else if unit.move_queued() { UNIT_MOVING_COLOR }
                 else { UNIT_COLOR }
             );
-            let _ = canvas.draw_rect(dst);
+            let _ = canvas.draw_rect(bounds);
         }
     }
 
@@ -324,6 +333,11 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     }
 }
 
+fn draw_waypoint(canvas: &mut Canvas<Window>, p: ScreenPoint) {
+    canvas.set_draw_color(WAYPOINT_COLOR);
+    canvas.draw_rect(rect_from_point_rad(p, WAYPOINT_RAD));
+}
+
 fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
     let xmin = i32::min(p1.x.0, p2.x.0);
     let xmax = i32::max(p1.x.0, p2.x.0);
@@ -332,4 +346,11 @@ fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
     Rect::new(
         xmin, ymin,
         (xmax-xmin) as u32, (ymax-ymin) as u32)
+}
+
+fn rect_from_point_rad(p: ScreenPoint, rad: i32) -> Rect {
+    Rect::new(
+        p.x.0 - rad, p.y.0 - rad,
+        (rad*2) as u32, (rad*2) as u32
+    )
 }
