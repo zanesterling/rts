@@ -5,7 +5,9 @@ mod sprite_sheet;
 mod dimensions;
 
 extern crate sdl2;
+extern crate rand;
 
+use rand::Rng;
 use sdl2::Sdl;
 use sdl2::event::Event;
 use sdl2::image;
@@ -36,6 +38,14 @@ const WAYPOINT_RAD: i32 = 2;
 
 const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
 const SHOW_UNIT_DEBUG_BOXES: bool = false;
+
+// TODO: Do some stuff to pick the right screen / let user pick.
+const WINDOW_WIDTH:  u32 = 800;
+const WINDOW_HEIGHT: u32 = 600;
+const SCREEN_TL_X:   i32 = 1524;
+const SCREEN_TL_Y:   i32 = 446;
+const SCREEN_BR_X:   i32 = 3202 + WINDOW_WIDTH as i32;
+const SCREEN_BR_Y:   i32 = 1256 + WINDOW_HEIGHT as i32;
 
 struct State<'a> {
     running: bool,
@@ -123,9 +133,11 @@ impl BoxSelect {
 fn main() {
     let sdl_context = sdl2::init().unwrap();
     let _sdl_image_context = image::init(image::InitFlag::PNG).unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
+    let video = sdl_context.video().unwrap();
 
-    let window = video_subsystem.window("rts!", 800, 600)
+    let n_screens = video.num_video_displays().unwrap();
+
+    let window = video.window("rts!", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
         .build()
         .unwrap();
@@ -165,12 +177,12 @@ fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
 
         // Handle input.
         for event in event_pump.poll_iter() {
-            handle_event(&mut state, event);
+            handle_event(&mut state, &mut canvas, event);
         }
     }
 }
 
-fn handle_event(state: &mut State, event: Event) {
+fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
     match event {
         // Quit.
         Event::Quit {..} |
@@ -253,6 +265,22 @@ fn handle_event(state: &mut State, event: Event) {
                 Some(Keycode::RShift) => { ist.right_shift_down = true; }
                 Some(Keycode::LAlt) => { ist.left_alt_down = true; }
                 Some(Keycode::RAlt) => { ist.right_alt_down = true; }
+
+                Some(Keycode::R) => {
+                    let mut thread_rng = rand::thread_rng();
+                    let x = thread_rng.gen_range(
+                        SCREEN_TL_X..SCREEN_BR_X-WINDOW_WIDTH as i32);
+                    let y = thread_rng.gen_range(
+                        SCREEN_TL_Y..SCREEN_BR_Y-WINDOW_HEIGHT as i32);
+                    canvas.window_mut().set_position(
+                        sdl2::video::WindowPos::Positioned(x),
+                        sdl2::video::WindowPos::Positioned(y),
+                    );
+                },
+                Some(Keycode::P) => {
+                    let (x, y) = canvas.window().position();
+                    println!("({}, {})", x ,y);
+                },
                 _ => {},
             }
         },

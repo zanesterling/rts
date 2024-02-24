@@ -8,6 +8,9 @@ edition = "2021"
 [dependenciess]
 sdl2 = "0.36.0"
 
+[dependencies]
+rand = "0.8.5"
+
 [dependencies.sdl2]
 default-features = false
 features = ["bundled", "image"]
