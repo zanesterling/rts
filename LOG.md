@@ -27,6 +27,11 @@ something around the screen by dragging the window.
 Should be fun to play with & explore ideas. I just need to figure out what the
 APIs are like for moving windows around. Maybe SDL has some stuff?
 
+---
+
+Note: would be good to revisit any/all uses of `WorldPoint.x.0` et al and try
+to replace them with natural point transformation helpers.
+
 ## 2024-02-23
 What is an improvement I can make to the game?
 

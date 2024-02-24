@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::collections::VecDeque;
+
 use crate::sprite_sheet::SpriteKey;
 use crate::dimensions::{
   WorldCoord as Coord,
@@ -6,6 +9,7 @@ use crate::dimensions::{
 };
 
 pub const TILE_WIDTH: u32 = 64;
+pub const TILE_WIDTH_F32: f32 = 64.;
 
 pub struct State {
   pub units: Vec<Unit>,
@@ -111,6 +115,66 @@ impl Unit {
 
   pub fn move_queued(&self) -> bool {
     self.waypoints.len() > 0
+  }
+
+  // Clear the waypoint queue, find a path to dest, and enqueue that path
+  // in the waypoints. Returns true if a path was found, and false otherwise.
+  //
+  // As a first pass, this is implemented as BFS.
+  // TODO: Implement A*.
+  pub fn pathfind(&mut self, map: &Map, dest: Point) -> bool {
+    // Clear the current waypoint path.
+    self.waypoints.clear();
+
+    let src = TilePoint {
+      x: self.pos.x.0 as u32 / TILE_WIDTH,
+      y: self.pos.y.0 as u32 / TILE_WIDTH,
+    };
+    let dest = TilePoint {
+      x: dest.x.0 as u32 / TILE_WIDTH,
+      y: dest.y.0 as u32 / TILE_WIDTH,
+    };
+    #[derive(Clone, Copy)]
+    struct BackPath {
+      here: TilePoint,
+      best_source: TilePoint,
+      path_cost: u32,
+    }
+
+    // Find a path. (incidentally, finds the best path)
+    let mut visited: HashMap<TilePoint, BackPath> = HashMap::new();
+    let mut to_visit: VecDeque<BackPath> = VecDeque::new();
+    to_visit.push_front(BackPath {
+      here: src,
+      best_source: src, // Just need to put some value here.
+      path_cost: 0
+    });
+    while !to_visit.is_empty() {
+      let point = to_visit.pop_front().unwrap();
+      if !visited.contains_key(&point.here) {
+        visited.insert(point.here, point);
+      }
+      if point.here == dest { break }
+      for p in point.here.neighbors4(&map) {
+        to_visit.push_back(BackPath {
+          here: p,
+          best_source: point.here,
+          path_cost: point.path_cost + 1,
+        });
+      }
+    }
+
+    if !visited.contains_key(&dest) { return false; }
+    let mut path_reverse = vec![];
+    let mut current = visited.get(&dest).unwrap();
+    while current.here != src {
+      path_reverse.push(current.here);
+      current = visited.get(&current.best_source).unwrap();
+    }
+    for p in path_reverse.iter().rev() {
+      self.waypoints.push(p.tile_center());
+    }
+    true
   }
 }
 
@@ -316,5 +380,32 @@ pub fn tile_pos(x: u32, y: u32) -> Point {
   Point {
     x: Coord((x * TILE_WIDTH) as f32),
     y: Coord((y * TILE_WIDTH) as f32),
+  }
+}
+
+#[derive(Eq, PartialEq, Hash, Clone, Copy)]
+struct TilePoint {
+  x: u32,
+  y: u32,
+}
+
+impl TilePoint {
+  // TODO: Optimize to be a custom iterator. That way no malloc needed.
+  fn neighbors4(&self, map: &Map) -> Vec<TilePoint> {
+    let (x, y) = (self.x, self.y);
+    let mut out = vec![];
+    out.reserve_exact(4);
+    if x > 0 { out.push(TilePoint { x: x-1, y }); }
+    if y > 0 { out.push(TilePoint { x, y: y-1 }); }
+    if x <= map.width  { out.push(TilePoint { x: x+1, y }); }
+    if y <= map.height { out.push(TilePoint { x, y: y+1 }); }
+    out
+  }
+
+  fn tile_center(self) -> Point {
+    Point {
+      x: Coord((self.x as f32 + 0.5) * TILE_WIDTH_F32),
+      y: Coord((self.y as f32 + 0.5) * TILE_WIDTH_F32),
+    }
   }
 }
