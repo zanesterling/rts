@@ -151,9 +151,8 @@ impl Unit {
     });
     while !to_visit.is_empty() {
       let point = to_visit.pop_front().unwrap();
-      if !visited.contains_key(&point.here) {
-        visited.insert(point.here, point);
-      }
+      if visited.contains_key(&point.here) { continue }
+      visited.insert(point.here, point);
       if point.here == dest { break }
       for p in point.here.neighbors4(&map) {
         let tile_blocked = map.get_tile(p.x, p.y)
