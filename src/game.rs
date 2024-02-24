@@ -175,6 +175,7 @@ impl Unit {
       path_reverse.push(current.here);
       current = visited.get(&current.best_source).unwrap();
     }
+    self.waypoints.push(src.tile_center());
     for p in path_reverse.iter().rev() {
       self.waypoints.push(p.tile_center());
     }
