@@ -1,5 +1,32 @@
 # Development log
 
+## 2024-02-24
+What shall I do this morning? I think I'll try adding a simple, sub-optimal
+form of pathfinding. I can improve on it in future steps, but it should get a
+guy through the maze. I'll just do neighbors4 BFS, and not worry about
+diagonals for now.
+
+---
+
+The other night I had a cool idea for a feature. Very few games do multiple OS
+windows. Like, the only ones I can think of are Stellaris et al, which do
+in-game windows (not OS windows), and some of Bram's spreadsheet games.  But
+both of those just use windows for the same purpose as the OS, to show more
+content and let you decide what to look at and how to organize it. I'm
+interested in using windows in ways that are more directly tied to the
+gameplay.
+
+For instance, maybe you have some overlord-like unit that provides vision. But
+rather than have fog of war, each overlord produces/is a different OS window.
+To move them around you drag the OS window, and then it snaps back to where it
+was and creeps across the screen to the destination.
+
+Or maybe it's like a point&click puzzle game, and you move your flashlight or
+something around the screen by dragging the window.
+
+Should be fun to play with & explore ideas. I just need to figure out what the
+APIs are like for moving windows around. Maybe SDL has some stuff?
+
 ## 2024-02-23
 What is an improvement I can make to the game?
 
@@ -9,6 +36,10 @@ What is an improvement I can make to the game?
 - I could add VIOLENCE.
 
 Let's do waypoints first :-)
+
+---
+
+Finished up doing the waypoints and shift click. yeet!
 
 ## 2024-02-22
 What can I do today? My brain is exTREMELY melty. Maybe I can find some nice
