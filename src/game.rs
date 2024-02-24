@@ -401,8 +401,8 @@ impl TilePoint {
     out.reserve_exact(4);
     if x > 0 { out.push(TilePoint { x: x-1, y }); }
     if y > 0 { out.push(TilePoint { x, y: y-1 }); }
-    if x <= map.width  { out.push(TilePoint { x: x+1, y }); }
-    if y <= map.height { out.push(TilePoint { x, y: y+1 }); }
+    if x+1 < map.width  { out.push(TilePoint { x: x+1, y }); }
+    if y+1 < map.height { out.push(TilePoint { x, y: y+1 }); }
     out
   }
 
