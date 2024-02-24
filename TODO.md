@@ -1,7 +1,9 @@
 - [-] Unit movement
 	- [X] waypoints
 	- [X] shift-click to queue up movements
-	- [ ] pathfinding
+	- [X] grid pathfinding
+	- [ ] circle-based collision detection
+	- [ ] grid-free pathfinding
 - [ ] Abilities!
 	- [ ] representation for abilities
 	- [ ] number-control interface
