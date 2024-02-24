@@ -203,11 +203,10 @@ fn handle_event(state: &mut State, event: Event) {
                 .to_world(state.camera_pos);
             for unit in state.game.units.iter_mut() {
                 if unit.selected {
-                    if state.input_state.shift() {
-                        unit.queue_move(click_pos);
-                    } else {
-                        unit.move_to(click_pos);
+                    if !state.input_state.shift() {
+                        unit.waypoints.clear();
                     }
+                    unit.pathfind(&state.game.map, click_pos);
                 }
             }
         },

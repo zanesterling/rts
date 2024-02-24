@@ -117,18 +117,18 @@ impl Unit {
     self.waypoints.len() > 0
   }
 
-  // Clear the waypoint queue, find a path to dest, and enqueue that path
-  // in the waypoints. Returns true if a path was found, and false otherwise.
+  // Find a path to dest, and enqueue that path in the waypoints. Returns true
+  // if a path was found, and false otherwise.
   //
   // As a first pass, this is implemented as BFS.
   // TODO: Implement A*.
   pub fn pathfind(&mut self, map: &Map, dest: Point) -> bool {
-    // Clear the current waypoint path.
-    self.waypoints.clear();
-
+    let src = if self.waypoints.is_empty()
+      { self.pos }
+      else { self.waypoints[self.waypoints.len() - 1] };
     let src = TilePoint {
-      x: self.pos.x.0 as u32 / TILE_WIDTH,
-      y: self.pos.y.0 as u32 / TILE_WIDTH,
+      x: src.x.0 as u32 / TILE_WIDTH,
+      y: src.y.0 as u32 / TILE_WIDTH,
     };
     let dest = TilePoint {
       x: dest.x.0 as u32 / TILE_WIDTH,
