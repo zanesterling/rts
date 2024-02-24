@@ -156,6 +156,10 @@ impl Unit {
       }
       if point.here == dest { break }
       for p in point.here.neighbors4(&map) {
+        let tile_blocked = map.get_tile(p.x, p.y)
+          .map(|t| t != GridTile::Empty)
+          .unwrap_or(true);
+        if tile_blocked { continue }
         to_visit.push_back(BackPath {
           here: p,
           best_source: point.here,
