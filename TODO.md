@@ -1,6 +1,6 @@
-- [ ] Unit movement
-	- [ ] waypoints
-	- [ ] shift-click to queue up movements
+- [-] Unit movement
+	- [X] waypoints
+	- [X] shift-click to queue up movements
 	- [ ] pathfinding
 - [ ] Abilities!
 	- [ ] representation for abilities
