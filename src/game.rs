@@ -166,8 +166,9 @@ impl Unit {
         });
       }
     }
-
     if !visited.contains_key(&dest) { return false; }
+
+    // Make waypoints for the path found.
     let mut path_reverse = vec![];
     let mut current = visited.get(&dest).unwrap();
     while current.here != src {
