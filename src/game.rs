@@ -183,13 +183,16 @@ impl Unit {
 
 pub trait Ability {
   fn keycode(&self) -> Keycode;
+  fn name(&self) -> &'static str;
   fn cast(&self, state: &mut State, target: Point);
 }
 
 pub struct AbilityBuild {}
+const ABILITY_BUILD_NAME: &str = "Build";
 
 impl Ability for AbilityBuild {
   fn keycode(&self) -> Keycode { Keycode::B }
+  fn name(&self) -> &'static str { ABILITY_BUILD_NAME }
 
   fn cast(&self, state: &mut State, target: Point) {
     state.units.push(Unit::new(
