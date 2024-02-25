@@ -2,6 +2,7 @@
 mod game;
 #[allow(dead_code)]
 mod sprite_sheet;
+#[allow(dead_code)]
 mod dimensions;
 
 extern crate sdl2;
@@ -84,7 +85,7 @@ impl<'a> State<'a> {
     // Returns a world point corresponding to the top-left corner of the
     // renderable window.
     pub fn camera_pos(&self) -> WorldPoint {
-        self.window_pos.to_world()
+        self.camera_pos
     }
 }
 
@@ -324,9 +325,6 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                 x - state.display_bounds.top_left_x,
                 y - state.display_bounds.top_left_y,
             );
-            println!("WindowEvent::Moved({}, {})",
-                state.window_pos.x,
-                state.window_pos.y)
         },
 
         _ => {},
