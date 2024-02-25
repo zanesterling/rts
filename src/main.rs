@@ -27,7 +27,7 @@ use crate::sprite_sheet::SpriteSheet;
 use crate::dimensions::{
     WorldCoord,
     WorldPoint,
-    ScreenPoint,
+    ScreenPoint as WindowPoint,
     ToWorld,
 };
 
@@ -116,7 +116,7 @@ impl InputState {
 }
 
 impl BoxSelect {
-    fn resolve(&self, final_pt: ScreenPoint, state: &mut State) {
+    fn resolve(&self, final_pt: WindowPoint, state: &mut State) {
         let selection_rect = rect_from_points(
             self.from.to_screen(state.camera_pos), final_pt);
         for unit in state.game.units.iter_mut() {
@@ -188,7 +188,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
 
         // Left mouse down / up: box select.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Left, ..} => {
-            let scr_click = ScreenPoint::new(x, y);
+            let scr_click = WindowPoint::new(x, y);
             let from = scr_click.to_world(state.camera_pos);
             state.drag_state = DragState::BoxSelect(BoxSelect {
                 from,
@@ -198,14 +198,14 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         Event::MouseButtonUp {x, y, mouse_btn: MouseButton::Left, ..} => {
             // Select units that are in the box.
             if let DragState::BoxSelect(box_select) = state.drag_state {
-                box_select.resolve(ScreenPoint::new(x, y), state);
+                box_select.resolve(WindowPoint::new(x, y), state);
             }
             state.drag_state = DragState::None;
         },
 
         // Right mouse button -- issue or queue move command.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Right, ..} => {
-            let click_pos = ScreenPoint::new(x, y)
+            let click_pos = WindowPoint::new(x, y)
                 .to_world(state.camera_pos);
             for unit in state.game.units.iter_mut() {
                 if unit.selected {
@@ -221,7 +221,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Middle, .. } => {
             // End box-select if you middle mouse click-n-drag.
             if let DragState::BoxSelect(box_select) = state.drag_state {
-                box_select.resolve(ScreenPoint::new(x, y), state);
+                box_select.resolve(WindowPoint::new(x, y), state);
             }
             state.drag_state = DragState::CameraDrag;
         },
@@ -234,7 +234,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         Event::MouseMotion {x, y, xrel, yrel, ..} => {
             match &mut state.drag_state {
                 DragState::BoxSelect(box_select) => {
-                    box_select.to = ScreenPoint::new(x, y)
+                    box_select.to = WindowPoint::new(x, y)
                         .to_world(state.camera_pos);
                 },
                 DragState::CameraDrag => {
@@ -349,12 +349,12 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     }
 }
 
-fn draw_waypoint(canvas: &mut Canvas<Window>, p: ScreenPoint) {
+fn draw_waypoint(canvas: &mut Canvas<Window>, p: WindowPoint) {
     canvas.set_draw_color(WAYPOINT_COLOR);
     let _ = canvas.draw_rect(rect_from_center_rad(p, WAYPOINT_RAD));
 }
 
-fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
+fn rect_from_points(p1: WindowPoint, p2: WindowPoint) -> Rect {
     let xmin = i32::min(p1.x(), p2.x());
     let xmax = i32::max(p1.x(), p2.x());
     let ymin = i32::min(p1.y(), p2.y());
@@ -364,6 +364,6 @@ fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
         (xmax-xmin) as u32, (ymax-ymin) as u32)
 }
 
-fn rect_from_center_rad(p: ScreenPoint, rad: u32) -> Rect {
+fn rect_from_center_rad(p: WindowPoint, rad: u32) -> Rect {
     Rect::from_center(p, rad*2, rad*2)
 }
