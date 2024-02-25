@@ -24,7 +24,13 @@ use std::time::Duration;
 
 use crate::game::{GridTile, TILE_WIDTH};
 use crate::sprite_sheet::SpriteSheet;
-use crate::dimensions::{WorldCoord, WorldPoint, ScreenCoord, ScreenPoint};
+use crate::dimensions::{
+    WorldCoord,
+    WorldPoint,
+    ScreenCoord,
+    ScreenPoint,
+    ToWorld,
+};
 
 const EMPTY_TILE_COLOR: Color = Color::RGB(40, 42, 54);
 const OBSTACLE_COLOR: Color = Color::RGB(255, 184, 108);

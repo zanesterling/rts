@@ -119,8 +119,13 @@ impl SubAssign for WorldPoint {
 
 #[derive(Clone, Copy)]
 pub struct ScreenPoint { pub x: ScreenCoord, pub y: ScreenCoord }
-impl ScreenPoint {
-  pub fn to_world(self, camera: WorldPoint) -> WorldPoint {
+
+pub trait ToWorld {
+  fn to_world(self, camera: WorldPoint) -> WorldPoint;
+}
+
+impl ToWorld for ScreenPoint {
+  fn to_world(self, camera: WorldPoint) -> WorldPoint {
     WorldPoint {
       x: WorldCoord(self.x.0 as f32 / PIXELS_PER_WORLD),
       y: WorldCoord(self.y.0 as f32 / PIXELS_PER_WORLD),
