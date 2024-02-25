@@ -22,7 +22,7 @@ use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
 
-use crate::game::{GridTile, TILE_WIDTH, tile_pos};
+use crate::game::{GridTile, TILE_WIDTH};
 use crate::sprite_sheet::SpriteSheet;
 use crate::dimensions::{WorldCoord, WorldPoint, ScreenCoord, ScreenPoint};
 
@@ -309,7 +309,8 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
             GridTile::Empty => EMPTY_TILE_COLOR,
             GridTile::Obstacle => OBSTACLE_COLOR,
         });
-        let window_pos = tile_pos(tile.x, tile.y).to_screen(state.camera_pos);
+        let window_pos = tile.pos.tile_pos()
+            .to_screen(state.camera_pos);
         let _ = canvas.fill_rect(
             Rect::new(
                 window_pos.x.0, window_pos.y.0,

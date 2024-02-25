@@ -283,8 +283,7 @@ pub struct MapTileIterator<'a> {
 }
 
 pub struct MapTileIteratorItem {
-  pub x: u32,
-  pub y: u32,
+  pub pos: TilePoint,
   pub tile: GridTile,
 }
 
@@ -294,8 +293,7 @@ impl Iterator for MapTileIterator<'_> {
   fn next(&mut self) -> Option<MapTileIteratorItem> {
     if self.y >= self.map.height { return None }
     let out = MapTileIteratorItem {
-      x: self.x,
-      y: self.y,
+      pos: TilePoint{x: self.x, y: self.y},
       tile: self.map.get_tile_unchecked(self.x, self.y),
     };
     if self.x >= self.map.width - 1 {
@@ -354,8 +352,7 @@ impl Iterator for MapTileRectIterator<'_> {
   fn next(&mut self) -> Option<MapTileIteratorItem> {
     if self.next_y >= self.top_left_y + self.height { return None }
     let tile = MapTileIteratorItem {
-      x: self.next_x,
-      y: self.next_y,
+      pos: TilePoint{ x: self.next_x, y: self.next_y },
       tile: self.map.get_tile_unchecked(self.next_x, self.next_y),
     };
 
@@ -375,16 +372,8 @@ pub enum GridTile {
   Obstacle,
 }
 
-// Converts tile coordinates to world coordinates.
-pub fn tile_pos(x: u32, y: u32) -> Point {
-  Point {
-    x: Coord((x * TILE_WIDTH) as f32),
-    y: Coord((y * TILE_WIDTH) as f32),
-  }
-}
-
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
-struct TilePoint {
+pub struct TilePoint {
   x: u32,
   y: u32,
 }
@@ -406,6 +395,14 @@ impl TilePoint {
     Point {
       x: Coord((self.x as f32 + 0.5) * TILE_WIDTH_F32),
       y: Coord((self.y as f32 + 0.5) * TILE_WIDTH_F32),
+    }
+  }
+
+  // Converts tile coordinates to world coordinates.
+  pub fn tile_pos(self) -> Point {
+    Point {
+      x: Coord((self.x * TILE_WIDTH) as f32),
+      y: Coord((self.y * TILE_WIDTH) as f32),
     }
   }
 }
