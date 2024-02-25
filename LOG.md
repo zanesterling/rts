@@ -11,6 +11,14 @@ Let's next do some of that crazy window-dragging viewport stuff. When you drag
 a window to a new spot, you should see the new world location when you drop it
 off.
 
+---
+
+Okay I'm going to back away from the novel window-based mechanic for now. It
+sounds cool, and I think it's super neat to have a novel mechanic. But I'm
+confident right now that I'm not very good at making something FUN. So I think
+I should cut that from the MVP and instead try to make something normal that's
+FUN.
+
 ## 2024-02-24
 What shall I do this morning? I think I'll try adding a simple, sub-optimal
 form of pathfinding. I can improve on it in future steps, but it should get a
