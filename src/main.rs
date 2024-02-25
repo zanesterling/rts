@@ -29,6 +29,7 @@ use crate::dimensions::{
     WorldPoint,
     ScreenPoint as WindowPoint,
     ToWorld,
+    DisplayPoint,
 };
 
 const EMPTY_TILE_COLOR: Color = Color::RGB(40, 42, 54);
@@ -58,6 +59,7 @@ struct State<'a> {
     drag_state: DragState,
     sprite_sheet: SpriteSheet<'a>,
     camera_pos: WorldPoint,
+    window_pos: DisplayPoint,
     input_state: InputState,
 }
 
@@ -69,6 +71,7 @@ impl<'a> State<'a> {
             drag_state: DragState::None,
             sprite_sheet,
             camera_pos: WorldPoint::new(WorldCoord(0.), WorldCoord(0.)),
+            window_pos: DisplayPoint::new(0, 0),
             input_state: InputState::new(),
         }
     }
@@ -290,6 +293,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
 
         Event::Window { win_event: WindowEvent::Moved(x, y), .. } => {
             println!("WindowEvent::Moved({}, {})", x, y);
+            state.window_pos = DisplayPoint::new(x, y);
         },
 
         _ => {},
