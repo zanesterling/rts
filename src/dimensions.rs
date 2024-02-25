@@ -1,3 +1,5 @@
+pub use sdl2::rect::Point as ScreenPoint;
+
 use std::ops::{Neg, Add, Sub, Mul, Div, SubAssign};
 use std::cmp::{Ordering, PartialOrd};
 
@@ -43,9 +45,6 @@ impl WorldCoord {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct ScreenCoord(pub i32);
-
-#[derive(Clone, Copy, Debug)]
 pub struct WorldPoint { pub x: WorldCoord, pub y: WorldCoord }
 impl WorldPoint {
   pub fn new(x: WorldCoord, y: WorldCoord) -> WorldPoint {
@@ -66,10 +65,10 @@ impl WorldPoint {
 
   pub fn to_screen(self, camera: WorldPoint) -> ScreenPoint {
     let offset = self - camera;
-    ScreenPoint {
-      x: ScreenCoord((offset.x.0 * PIXELS_PER_WORLD) as i32),
-      y: ScreenCoord((offset.y.0 * PIXELS_PER_WORLD) as i32),
-    }
+    ScreenPoint::new(
+      (offset.x.0 * PIXELS_PER_WORLD) as i32,
+      (offset.y.0 * PIXELS_PER_WORLD) as i32,
+    )
   }
 
   // Clamps point p to the rectangle.
@@ -117,9 +116,6 @@ impl SubAssign for WorldPoint {
   }
 }
 
-#[derive(Clone, Copy)]
-pub struct ScreenPoint { pub x: ScreenCoord, pub y: ScreenCoord }
-
 pub trait ToWorld {
   fn to_world(self, camera: WorldPoint) -> WorldPoint;
 }
@@ -127,8 +123,8 @@ pub trait ToWorld {
 impl ToWorld for ScreenPoint {
   fn to_world(self, camera: WorldPoint) -> WorldPoint {
     WorldPoint {
-      x: WorldCoord(self.x.0 as f32 / PIXELS_PER_WORLD),
-      y: WorldCoord(self.y.0 as f32 / PIXELS_PER_WORLD),
+      x: WorldCoord(self.x() as f32 / PIXELS_PER_WORLD),
+      y: WorldCoord(self.y() as f32 / PIXELS_PER_WORLD),
     } + camera
   }
 }

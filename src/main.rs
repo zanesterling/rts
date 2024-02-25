@@ -27,7 +27,6 @@ use crate::sprite_sheet::SpriteSheet;
 use crate::dimensions::{
     WorldCoord,
     WorldPoint,
-    ScreenCoord,
     ScreenPoint,
     ToWorld,
 };
@@ -190,7 +189,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
 
         // Left mouse down / up: box select.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Left, ..} => {
-            let scr_click = ScreenPoint{x: ScreenCoord(x), y: ScreenCoord(y)};
+            let scr_click = ScreenPoint::new(x, y);
             let from = scr_click.to_world(state.camera_pos);
             state.drag_state = DragState::BoxSelect(BoxSelect {
                 from,
@@ -200,16 +199,14 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         Event::MouseButtonUp {x, y, mouse_btn: MouseButton::Left, ..} => {
             // Select units that are in the box.
             if let DragState::BoxSelect(box_select) = state.drag_state {
-                let (x, y) = (ScreenCoord(x), ScreenCoord(y));
-                box_select.resolve(ScreenPoint{x, y}, state);
+                box_select.resolve(ScreenPoint::new(x, y), state);
             }
             state.drag_state = DragState::None;
         },
 
         // Right mouse button -- issue or queue move command.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Right, ..} => {
-            let (x, y) = (ScreenCoord(x), ScreenCoord(y));
-            let click_pos = ScreenPoint{x, y}
+            let click_pos = ScreenPoint::new(x, y)
                 .to_world(state.camera_pos);
             for unit in state.game.units.iter_mut() {
                 if unit.selected {
@@ -225,8 +222,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Middle, .. } => {
             // End box-select if you middle mouse click-n-drag.
             if let DragState::BoxSelect(box_select) = state.drag_state {
-                let (x, y) = (ScreenCoord(x), ScreenCoord(y));
-                box_select.resolve(ScreenPoint{x, y}, state);
+                box_select.resolve(ScreenPoint::new(x, y), state);
             }
             state.drag_state = DragState::CameraDrag;
         },
@@ -239,10 +235,8 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         Event::MouseMotion {x, y, xrel, yrel, ..} => {
             match &mut state.drag_state {
                 DragState::BoxSelect(box_select) => {
-                    box_select.to = ScreenPoint {
-                        x: ScreenCoord(x),
-                        y: ScreenCoord(y),
-                    }.to_world(state.camera_pos);
+                    box_select.to = ScreenPoint::new(x, y)
+                        .to_world(state.camera_pos);
                 },
                 DragState::CameraDrag => {
                     state.camera_pos -= WorldPoint {
@@ -313,7 +307,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
             .to_screen(state.camera_pos);
         let _ = canvas.fill_rect(
             Rect::new(
-                window_pos.x.0, window_pos.y.0,
+                window_pos.x(), window_pos.y(),
                 TILE_WIDTH, TILE_WIDTH));
     }
 
@@ -360,10 +354,10 @@ fn draw_waypoint(canvas: &mut Canvas<Window>, p: ScreenPoint) {
 }
 
 fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
-    let xmin = i32::min(p1.x.0, p2.x.0);
-    let xmax = i32::max(p1.x.0, p2.x.0);
-    let ymin = i32::min(p1.y.0, p2.y.0);
-    let ymax = i32::max(p1.y.0, p2.y.0);
+    let xmin = i32::min(p1.x(), p2.x());
+    let xmax = i32::max(p1.x(), p2.x());
+    let ymin = i32::min(p1.y(), p2.y());
+    let ymax = i32::max(p1.y(), p2.y());
     Rect::new(
         xmin, ymin,
         (xmax-xmin) as u32, (ymax-ymin) as u32)
@@ -371,7 +365,7 @@ fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
 
 fn rect_from_center_rad(p: ScreenPoint, rad: i32) -> Rect {
     Rect::new(
-        p.x.0 - rad, p.y.0 - rad,
+        p.x() - rad, p.y() - rad,
         (rad*2) as u32, (rad*2) as u32
     )
 }
