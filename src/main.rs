@@ -45,13 +45,13 @@ const WAYPOINT_RAD: u32 = 2;
 const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
 const SHOW_UNIT_DEBUG_BOXES: bool = false;
 
-// TODO: Do some stuff to pick the right screen / let user pick.
+// TODO: Do some stuff to pick the right window / let user pick.
 const WINDOW_WIDTH:  u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
-const SCREEN_TL_X:   i32 = 1524;
-const SCREEN_TL_Y:   i32 = 446;
-const SCREEN_BR_X:   i32 = 3202 + WINDOW_WIDTH as i32;
-const SCREEN_BR_Y:   i32 = 1256 + WINDOW_HEIGHT as i32;
+const DISPLAY_TL_X:   i32 = 1524;
+const DISPLAY_TL_Y:   i32 = 446;
+const DISPLAY_BR_X:   i32 = 3202 + WINDOW_WIDTH as i32;
+const DISPLAY_BR_Y:   i32 = 1256 + WINDOW_HEIGHT as i32;
 
 struct State<'a> {
     running: bool,
@@ -125,7 +125,7 @@ impl BoxSelect {
         for unit in state.game.units.iter_mut() {
             let unit_bounds = rect_from_center_rad(
                 unit.pos.to_window(state.camera_pos),
-                unit.screen_rad());
+                unit.window_rad());
             unit.selected = selection_rect.has_intersection(unit_bounds);
         }
     }
@@ -263,9 +263,9 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                 Some(Keycode::R) => {
                     let mut thread_rng = rand::thread_rng();
                     let x = thread_rng.gen_range(
-                        SCREEN_TL_X..SCREEN_BR_X-WINDOW_WIDTH as i32);
+                        DISPLAY_TL_X..DISPLAY_BR_X-WINDOW_WIDTH as i32);
                     let y = thread_rng.gen_range(
-                        SCREEN_TL_Y..SCREEN_BR_Y-WINDOW_HEIGHT as i32);
+                        DISPLAY_TL_Y..DISPLAY_BR_Y-WINDOW_HEIGHT as i32);
                     canvas.window_mut().set_position(
                         sdl2::video::WindowPos::Positioned(x),
                         sdl2::video::WindowPos::Positioned(y),
@@ -328,7 +328,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
 
         // Draw unit.
         let bounds = rect_from_center_rad(
-            unit.pos.to_window(state.camera_pos), unit.screen_rad());
+            unit.pos.to_window(state.camera_pos), unit.window_rad());
         let _ = state.sprite_sheet.blit_sprite_to_rect(
             unit.sprite_key.as_str(), canvas, bounds);
 

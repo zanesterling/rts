@@ -172,7 +172,7 @@ impl Unit {
     true
   }
 
-  pub fn screen_rad(&self) -> u32 {
+  pub fn window_rad(&self) -> u32 {
     self.rad.0 as u32
   }
 }
