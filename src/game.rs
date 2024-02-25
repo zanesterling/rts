@@ -399,7 +399,7 @@ impl TilePoint {
   }
 
   // Converts tile coordinates to world coordinates.
-  pub fn tile_pos(self) -> Point {
+  pub fn to_world_point(self) -> Point {
     Point {
       x: Coord((self.x * TILE_WIDTH) as f32),
       y: Coord((self.y * TILE_WIDTH) as f32),

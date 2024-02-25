@@ -309,7 +309,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
             GridTile::Empty => EMPTY_TILE_COLOR,
             GridTile::Obstacle => OBSTACLE_COLOR,
         });
-        let window_pos = tile.pos.tile_pos()
+        let window_pos = tile.pos.to_world_point()
             .to_screen(state.camera_pos);
         let _ = canvas.fill_rect(
             Rect::new(
