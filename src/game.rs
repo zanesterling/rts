@@ -171,6 +171,10 @@ impl Unit {
     }
     true
   }
+
+  pub fn screen_rad(&self) -> u32 {
+    self.rad.0 as u32
+  }
 }
 
 pub struct Map {
