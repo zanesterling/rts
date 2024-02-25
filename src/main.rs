@@ -4,6 +4,8 @@ mod game;
 mod sprite_sheet;
 #[allow(dead_code)]
 mod dimensions;
+#[allow(dead_code)]
+mod map;
 
 extern crate sdl2;
 extern crate rand;
@@ -23,8 +25,6 @@ use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
 
-use crate::game::{GridTile, TILE_WIDTH};
-use crate::sprite_sheet::SpriteSheet;
 use crate::dimensions::{
     WorldCoord,
     WorldPoint,
@@ -32,6 +32,8 @@ use crate::dimensions::{
     ToWorld,
     DisplayPoint,
 };
+use crate::map::{GridTile, TILE_WIDTH};
+use crate::sprite_sheet::SpriteSheet;
 
 const EMPTY_TILE_COLOR: Color = Color::RGB(40, 42, 54);
 const OBSTACLE_COLOR: Color = Color::RGB(255, 184, 108);
