@@ -48,10 +48,10 @@ const SHOW_UNIT_DEBUG_BOXES: bool = false;
 // TODO: Do some stuff to pick the right window / let user pick.
 const WINDOW_WIDTH:  u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
-const DISPLAY_TL_X:   i32 = 1524;
-const DISPLAY_TL_Y:   i32 = 446;
-const DISPLAY_BR_X:   i32 = 3202 + WINDOW_WIDTH as i32;
-const DISPLAY_BR_Y:   i32 = 1256 + WINDOW_HEIGHT as i32;
+const DISPLAY_TL_X:  i32 = 1524;
+const DISPLAY_TL_Y:  i32 = 446;
+const DISPLAY_BR_X:  i32 = 3202 + WINDOW_WIDTH as i32;
+const DISPLAY_BR_Y:  i32 = 1256 + WINDOW_HEIGHT as i32;
 
 struct State<'a> {
     running: bool,
@@ -60,11 +60,15 @@ struct State<'a> {
     sprite_sheet: SpriteSheet<'a>,
     camera_pos: WorldPoint,
     window_pos: DisplayPoint,
+    display_bounds: DisplayBounds,
     input_state: InputState,
 }
 
 impl<'a> State<'a> {
-    pub fn new<'s>(sprite_sheet: SpriteSheet<'s>) -> State<'s> {
+    pub fn new<'s>(
+        sprite_sheet: SpriteSheet<'s>,
+        display_bounds: DisplayBounds,
+    ) -> State<'s> {
         State {
             running: true,
             game: game::State::new(),
@@ -72,6 +76,7 @@ impl<'a> State<'a> {
             sprite_sheet,
             camera_pos: WorldPoint::new(WorldCoord(0.), WorldCoord(0.)),
             window_pos: DisplayPoint::new(0, 0),
+            display_bounds,
             input_state: InputState::new(),
         }
     }
@@ -90,6 +95,12 @@ struct BoxSelect {
     to: WorldPoint,
 }
 
+struct DisplayBounds {
+    top_left_x: i32,
+    top_left_y: i32,
+    width:  u32,
+    height: u32,
+}
 
 struct InputState {
     left_ctrl_down: bool,
@@ -157,7 +168,15 @@ fn main() {
                 exit(1);
             });
 
-    let state = State::new(sprite_sheet);
+    let state = {
+        let display_bounds = DisplayBounds {
+            top_left_x: DISPLAY_TL_X,
+            top_left_y: DISPLAY_TL_Y,
+            width:  (DISPLAY_BR_X - DISPLAY_TL_X) as u32,
+            height: (DISPLAY_BR_Y - DISPLAY_TL_Y) as u32,
+        };
+        State::new(sprite_sheet, display_bounds)
+    };
     render(&mut canvas, &state);
     canvas.present();
     main_loop(state, canvas, sdl_context);
@@ -292,8 +311,13 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         },
 
         Event::Window { win_event: WindowEvent::Moved(x, y), .. } => {
-            println!("WindowEvent::Moved({}, {})", x, y);
-            state.window_pos = DisplayPoint::new(x, y);
+            state.window_pos = DisplayPoint::new(
+                x - state.display_bounds.top_left_x,
+                y - state.display_bounds.top_left_y,
+            );
+            println!("WindowEvent::Moved({}, {})",
+                state.window_pos.x,
+                state.window_pos.y)
         },
 
         _ => {},
