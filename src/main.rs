@@ -135,8 +135,6 @@ fn main() {
     let _sdl_image_context = image::init(image::InitFlag::PNG).unwrap();
     let video = sdl_context.video().unwrap();
 
-    let n_screens = video.num_video_displays().unwrap();
-
     let window = video.window("rts!", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
         .build()
