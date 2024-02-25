@@ -121,14 +121,9 @@ impl Unit {
     let src = if self.waypoints.is_empty()
       { self.pos }
       else { self.waypoints[self.waypoints.len() - 1] };
-    let src = TilePoint {
-      x: src.x.0 as u32 / TILE_WIDTH,
-      y: src.y.0 as u32 / TILE_WIDTH,
-    };
-    let dest = TilePoint {
-      x: dest.x.0 as u32 / TILE_WIDTH,
-      y: dest.y.0 as u32 / TILE_WIDTH,
-    };
+    let src = src.to_tile_point();
+    let dest = dest.to_tile_point();
+
     #[derive(Clone, Copy)]
     struct BackPath {
       here: TilePoint,
@@ -403,6 +398,21 @@ impl TilePoint {
     Point {
       x: Coord((self.x * TILE_WIDTH) as f32),
       y: Coord((self.y * TILE_WIDTH) as f32),
+    }
+  }
+}
+
+trait ToTilePoint {
+  fn to_tile_point(self) -> TilePoint;
+}
+
+impl ToTilePoint for Point {
+  fn to_tile_point(self) -> TilePoint {
+    // TODO: Add checks to this and other conversions to ensure
+    // the f32 is inside the range of allowable u32s.
+    TilePoint {
+      x: self.x.0 as u32 / TILE_WIDTH,
+      y: self.y.0 as u32 / TILE_WIDTH,
     }
   }
 }
