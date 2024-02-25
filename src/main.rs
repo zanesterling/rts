@@ -112,20 +112,14 @@ impl InputState {
 
 impl BoxSelect {
     fn resolve(&self, final_pt: ScreenPoint, state: &mut State) {
-        let rect = rect_from_points(
+        let selection_rect = rect_from_points(
             self.from.to_screen(state.camera_pos), final_pt);
         for unit in state.game.units.iter_mut() {
-            let rad = unit.rad;
-            let top_left = unit.pos - WorldPoint::new(rad, rad);
-            let top_left_screen = top_left.to_screen(state.camera_pos);
-            unit.selected = rect.has_intersection(
-                Rect::new(
-                    top_left_screen.x.0,
-                    top_left_screen.y.0,
-                    (rad.0 * 2.) as u32,
-                    (rad.0 * 2.) as u32
-                )
+            let unit_bounds = rect_from_center_rad(
+                unit.pos.to_screen(state.camera_pos),
+                unit.rad.0 as i32,
             );
+            unit.selected = selection_rect.has_intersection(unit_bounds);
         }
     }
 }
@@ -361,7 +355,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
 
 fn draw_waypoint(canvas: &mut Canvas<Window>, p: ScreenPoint) {
     canvas.set_draw_color(WAYPOINT_COLOR);
-    let _ = canvas.draw_rect(rect_from_point_rad(p, WAYPOINT_RAD));
+    let _ = canvas.draw_rect(rect_from_center_rad(p, WAYPOINT_RAD));
 }
 
 fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
@@ -374,7 +368,7 @@ fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
         (xmax-xmin) as u32, (ymax-ymin) as u32)
 }
 
-fn rect_from_point_rad(p: ScreenPoint, rad: i32) -> Rect {
+fn rect_from_center_rad(p: ScreenPoint, rad: i32) -> Rect {
     Rect::new(
         p.x.0 - rad, p.y.0 - rad,
         (rad*2) as u32, (rad*2) as u32
