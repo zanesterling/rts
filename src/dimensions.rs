@@ -163,6 +163,7 @@ impl WorldRect {
   }
 }
 
+#[derive(Clone, Copy)]
 pub struct DisplayPoint {
   pub x: i32,
   pub y: i32,
@@ -171,5 +172,12 @@ pub struct DisplayPoint {
 impl DisplayPoint {
   pub fn new(x: i32, y: i32) -> DisplayPoint {
     DisplayPoint { x, y }
+  }
+
+  pub fn to_world(self) -> WorldPoint {
+    WorldPoint {
+      x: WorldCoord(self.x as f32 / PIXELS_PER_WORLD),
+      y: WorldCoord(self.y as f32 / PIXELS_PER_WORLD),
+    }
   }
 }

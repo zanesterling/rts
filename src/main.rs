@@ -84,7 +84,7 @@ impl<'a> State<'a> {
     // Returns a world point corresponding to the top-left corner of the
     // renderable window.
     pub fn camera_pos(&self) -> WorldPoint {
-        self.camera_pos
+        self.window_pos.to_world()
     }
 }
 
