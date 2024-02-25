@@ -9,7 +9,7 @@ extern crate rand;
 
 use rand::Rng;
 use sdl2::Sdl;
-use sdl2::event::Event;
+use sdl2::event::{Event, WindowEvent};
 use sdl2::image;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
@@ -286,6 +286,10 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                 Some(Keycode::RAlt) => { ist.right_alt_down = false; }
                 _ => {},
             }
+        },
+
+        Event::Window { win_event: WindowEvent::Moved(x, y), .. } => {
+            println!("WindowEvent::Moved({}, {})", x, y);
         },
 
         _ => {},
