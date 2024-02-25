@@ -101,6 +101,7 @@ struct BoxSelect {
     to: WorldPoint,
 }
 
+#[allow(dead_code)]
 struct DisplayBounds {
     top_left_x: i32,
     top_left_y: i32,
