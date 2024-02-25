@@ -19,6 +19,7 @@ use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
+use sdl2::ttf::Font;
 use sdl2::video::Window;
 
 use std::process::exit;
@@ -43,6 +44,8 @@ const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
 const WAYPOINT_COLOR: Color = UNIT_MOVING_COLOR;
 
+const COLOR_WHITE: Color = Color::RGB(248, 248, 242);
+
 const WAYPOINT_RAD: u32 = 2;
 
 const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
@@ -56,7 +59,7 @@ const DISPLAY_TL_Y:  i32 = 446;
 const DISPLAY_BR_X:  i32 = 3202 + WINDOW_WIDTH as i32;
 const DISPLAY_BR_Y:  i32 = 1256 + WINDOW_HEIGHT as i32;
 
-struct State<'a> {
+struct State<'a, 'b> {
     running: bool,
     game: game::State,
     drag_state: DragState,
@@ -65,13 +68,15 @@ struct State<'a> {
     window_pos: DisplayPoint,
     display_bounds: DisplayBounds,
     input_state: InputState,
+    font: Font<'b, 'static>,
 }
 
-impl<'a> State<'a> {
-    pub fn new<'s>(
+impl<'a, 'b> State<'a, 'b> {
+    pub fn new<'s, 'f>(
         sprite_sheet: SpriteSheet<'s>,
         display_bounds: DisplayBounds,
-    ) -> State<'s> {
+        font: Font<'f, 'static>
+    ) -> State<'s, 'f> {
         State {
             running: true,
             game: game::State::new(),
@@ -81,6 +86,7 @@ impl<'a> State<'a> {
             window_pos: DisplayPoint::new(0, 0),
             display_bounds,
             input_state: InputState::new(),
+            font,
         }
     }
 
@@ -156,6 +162,11 @@ impl BoxSelect {
 fn main() {
     let sdl_context = sdl2::init().unwrap();
     let _sdl_image_context = image::init(image::InitFlag::PNG).unwrap();
+
+    let sdl_ttf_context = sdl2::ttf::init().unwrap();
+    let font = sdl_ttf_context.load_font("media/Serif.ttf", 24)
+        .expect("couldn't load font");
+
     let video = sdl_context.video().unwrap();
 
     let window = video.window("rts!", WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -186,7 +197,7 @@ fn main() {
             width:  (DISPLAY_BR_X - DISPLAY_TL_X) as u32,
             height: (DISPLAY_BR_Y - DISPLAY_TL_Y) as u32,
         };
-        State::new(sprite_sheet, display_bounds)
+        State::new(sprite_sheet, display_bounds, font)
     };
     render(&mut canvas, &state);
     canvas.present();

@@ -19,6 +19,11 @@ confident right now that I'm not very good at making something FUN. So I think
 I should cut that from the MVP and instead try to make something normal that's
 FUN.
 
+---
+
+I added sdl2::ttf as a dependency, so you have to also
+`apt install libsdl2-ttf-dev`.
+
 ## 2024-02-24
 What shall I do this morning? I think I'll try adding a simple, sub-optimal
 form of pathfinding. I can improve on it in future steps, but it should get a
