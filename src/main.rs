@@ -306,7 +306,28 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                     let (x, y) = canvas.window().position();
                     println!("({}, {})", x ,y);
                 },
-                _ => {},
+
+                Some(keycode) => {
+                    // If the key corresponds to a usable ability on a selected
+                    // unit, cast it.
+                    let mut ability = None;
+                    for unit in state.game.units.iter() {
+                        if !unit.selected { continue }
+                        for x in unit.abilities.iter() {
+                            if x.keycode() == keycode {
+                                ability = Some((*x).clone());
+                            }
+                        }
+                    }
+                    if let Some(ability) = ability {
+                        ability.cast(
+                            &mut state.game,
+                            WorldPoint::new(
+                                WorldCoord(100.), WorldCoord(100.)));
+                    }
+                },
+
+                _ => {}
             }
         },
         Event::KeyUp {keycode, ..} => {

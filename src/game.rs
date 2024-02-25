@@ -2,6 +2,7 @@ use sdl2::keyboard::Keycode;
 
 use std::collections::HashMap;
 use std::collections::VecDeque;
+use std::rc::Rc;
 
 use crate::dimensions::{
   WorldCoord as Coord,
@@ -79,7 +80,7 @@ pub struct Unit {
   pub waypoints: VecDeque<Point>,
   pub base_speed: Coord,
   pub sprite_key: SpriteKey,
-  pub abilities: Vec<Box<dyn Ability>>,
+  pub abilities: Vec<Rc<dyn Ability>>,
 }
 
 impl Unit {
@@ -91,7 +92,7 @@ impl Unit {
       waypoints: VecDeque::new(),
       base_speed: Coord(1.),
       sprite_key,
-      abilities: vec![],
+      abilities: vec![Rc::new(AbilityBuild{})], // FIXME
     }
   }
 
