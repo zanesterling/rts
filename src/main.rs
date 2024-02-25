@@ -80,6 +80,12 @@ impl<'a> State<'a> {
             input_state: InputState::new(),
         }
     }
+
+    // Returns a world point corresponding to the top-left corner of the
+    // renderable window.
+    pub fn camera_pos(&self) -> WorldPoint {
+        self.camera_pos
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -131,11 +137,12 @@ impl InputState {
 
 impl BoxSelect {
     fn resolve(&self, final_pt: WindowPoint, state: &mut State) {
+        let camera_pos = state.camera_pos();
         let selection_rect = rect_from_points(
-            self.from.to_window(state.camera_pos), final_pt);
+            self.from.to_window(camera_pos), final_pt);
         for unit in state.game.units.iter_mut() {
             let unit_bounds = rect_from_center_rad(
-                unit.pos.to_window(state.camera_pos),
+                unit.pos.to_window(camera_pos),
                 unit.window_rad());
             unit.selected = selection_rect.has_intersection(unit_bounds);
         }
@@ -211,7 +218,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         // Left mouse down / up: box select.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Left, ..} => {
             let scr_click = WindowPoint::new(x, y);
-            let from = scr_click.to_world(state.camera_pos);
+            let from = scr_click.to_world(state.camera_pos());
             state.drag_state = DragState::BoxSelect(BoxSelect {
                 from,
                 to: from,
@@ -228,7 +235,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         // Right mouse button -- issue or queue move command.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Right, ..} => {
             let click_pos = WindowPoint::new(x, y)
-                .to_world(state.camera_pos);
+                .to_world(state.camera_pos());
             for unit in state.game.units.iter_mut() {
                 if unit.selected {
                     if !state.input_state.shift() {
@@ -254,10 +261,11 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         },
 
         Event::MouseMotion {x, y, xrel, yrel, ..} => {
+            let camera_pos = state.camera_pos();
             match &mut state.drag_state {
                 DragState::BoxSelect(box_select) => {
                     box_select.to = WindowPoint::new(x, y)
-                        .to_world(state.camera_pos);
+                        .to_world(camera_pos);
                 },
                 DragState::CameraDrag => {
                     state.camera_pos -= WorldPoint {
@@ -335,7 +343,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
             GridTile::Obstacle => OBSTACLE_COLOR,
         });
         let window_pos = tile.pos.to_world_point()
-            .to_window(state.camera_pos);
+            .to_window(state.camera_pos());
         let _ = canvas.fill_rect(
             Rect::new(
                 window_pos.x(), window_pos.y(),
@@ -346,13 +354,13 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     for unit in state.game.units.iter() {
         if unit.selected {
             for p in unit.waypoints.iter() {
-                draw_waypoint(canvas, p.to_window(state.camera_pos));
+                draw_waypoint(canvas, p.to_window(state.camera_pos()));
             }
         }
 
         // Draw unit.
         let bounds = rect_from_center_rad(
-            unit.pos.to_window(state.camera_pos), unit.window_rad());
+            unit.pos.to_window(state.camera_pos()), unit.window_rad());
         let _ = state.sprite_sheet.blit_sprite_to_rect(
             unit.sprite_key.as_str(), canvas, bounds);
 
@@ -371,8 +379,8 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     if let DragState::BoxSelect(box_select) = &state.drag_state {
         canvas.set_draw_color(DRAG_PERIMETER_COLOR);
         let _ = canvas.draw_rect(rect_from_points(
-            box_select.from.to_window(state.camera_pos),
-            box_select.to.to_window(state.camera_pos),
+            box_select.from.to_window(state.camera_pos()),
+            box_select.to.to_window(state.camera_pos()),
         ));
     }
 }
