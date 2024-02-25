@@ -1,4 +1,4 @@
-pub use sdl2::rect::Point as ScreenPoint;
+pub use sdl2::rect::Point as WindowPoint;
 
 use std::ops::{Neg, Add, Sub, Mul, Div, SubAssign};
 use std::cmp::{Ordering, PartialOrd};
@@ -63,9 +63,9 @@ impl WorldPoint {
     self / magnitude
   }
 
-  pub fn to_screen(self, camera: WorldPoint) -> ScreenPoint {
+  pub fn to_window(self, camera: WorldPoint) -> WindowPoint {
     let offset = self - camera;
-    ScreenPoint::new(
+    WindowPoint::new(
       (offset.x.0 * PIXELS_PER_WORLD) as i32,
       (offset.y.0 * PIXELS_PER_WORLD) as i32,
     )
@@ -120,7 +120,7 @@ pub trait ToWorld {
   fn to_world(self, camera: WorldPoint) -> WorldPoint;
 }
 
-impl ToWorld for ScreenPoint {
+impl ToWorld for WindowPoint {
   fn to_world(self, camera: WorldPoint) -> WorldPoint {
     WorldPoint {
       x: WorldCoord(self.x() as f32 / PIXELS_PER_WORLD),

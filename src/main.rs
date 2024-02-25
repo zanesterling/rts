@@ -27,7 +27,7 @@ use crate::sprite_sheet::SpriteSheet;
 use crate::dimensions::{
     WorldCoord,
     WorldPoint,
-    ScreenPoint as WindowPoint,
+    WindowPoint,
     ToWorld,
     DisplayPoint,
 };
@@ -121,10 +121,10 @@ impl InputState {
 impl BoxSelect {
     fn resolve(&self, final_pt: WindowPoint, state: &mut State) {
         let selection_rect = rect_from_points(
-            self.from.to_screen(state.camera_pos), final_pt);
+            self.from.to_window(state.camera_pos), final_pt);
         for unit in state.game.units.iter_mut() {
             let unit_bounds = rect_from_center_rad(
-                unit.pos.to_screen(state.camera_pos),
+                unit.pos.to_window(state.camera_pos),
                 unit.screen_rad());
             unit.selected = selection_rect.has_intersection(unit_bounds);
         }
@@ -311,7 +311,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
             GridTile::Obstacle => OBSTACLE_COLOR,
         });
         let window_pos = tile.pos.to_world_point()
-            .to_screen(state.camera_pos);
+            .to_window(state.camera_pos);
         let _ = canvas.fill_rect(
             Rect::new(
                 window_pos.x(), window_pos.y(),
@@ -322,13 +322,13 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     for unit in state.game.units.iter() {
         if unit.selected {
             for p in unit.waypoints.iter() {
-                draw_waypoint(canvas, p.to_screen(state.camera_pos));
+                draw_waypoint(canvas, p.to_window(state.camera_pos));
             }
         }
 
         // Draw unit.
         let bounds = rect_from_center_rad(
-            unit.pos.to_screen(state.camera_pos), unit.screen_rad());
+            unit.pos.to_window(state.camera_pos), unit.screen_rad());
         let _ = state.sprite_sheet.blit_sprite_to_rect(
             unit.sprite_key.as_str(), canvas, bounds);
 
@@ -347,8 +347,8 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     if let DragState::BoxSelect(box_select) = &state.drag_state {
         canvas.set_draw_color(DRAG_PERIMETER_COLOR);
         let _ = canvas.draw_rect(rect_from_points(
-            box_select.from.to_screen(state.camera_pos),
-            box_select.to.to_screen(state.camera_pos),
+            box_select.from.to_window(state.camera_pos),
+            box_select.to.to_window(state.camera_pos),
         ));
     }
 }
