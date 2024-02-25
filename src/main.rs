@@ -416,6 +416,30 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
             box_select.to.to_window(state.camera_pos()),
         ));
     }
+
+    // Draw abilities, if there are any selected units.
+    //
+    // TODO: Clean up this code.
+    // This is intensely janky and low-res, and it's creating a new surface
+    // every single frame for each ability that a selected unit has.
+    let unit = state.game.units.iter().find(|unit| unit.selected);
+    if let Some(unit) = unit {
+        for ability in unit.abilities.iter() {
+            let text = format!("[{}] {}",
+                ability.keycode(), ability.name());
+            let surface = state.font.render(text.as_str()).solid(COLOR_WHITE)
+                .expect("couldn't render text");
+            let texture_creator = canvas.texture_creator();
+            let texture = texture_creator
+                .create_texture_from_surface(&surface)
+                .expect("couldn't create texture from text surface");
+
+            let bounds = texture.query();
+            canvas.copy(
+                &texture, None, Rect::new(0, 0, bounds.width, bounds.height))
+                .expect("couldn't copy text texture to canvas");
+        }
+    }
 }
 
 fn draw_waypoint(canvas: &mut Canvas<Window>, p: WindowPoint) {
