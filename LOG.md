@@ -1,5 +1,10 @@
 # Development log
 
+## 2024-02-25
+Today I did some refactoring, so now it's a bit harder to trip up when doing
+coordinate space conversions. Basically just made a couple more helper
+functions and switched the existing code to use those. Spring cleaning :)
+
 ## 2024-02-24
 What shall I do this morning? I think I'll try adding a simple, sub-optimal
 form of pathfinding. I can improve on it in future steps, but it should get a
