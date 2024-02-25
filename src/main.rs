@@ -39,7 +39,7 @@ const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
 const WAYPOINT_COLOR: Color = UNIT_MOVING_COLOR;
 
-const WAYPOINT_RAD: i32 = 2;
+const WAYPOINT_DIAM: u32 = 4;
 
 const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
 const SHOW_UNIT_DEBUG_BOXES: bool = false;
@@ -120,10 +120,10 @@ impl BoxSelect {
         let selection_rect = rect_from_points(
             self.from.to_screen(state.camera_pos), final_pt);
         for unit in state.game.units.iter_mut() {
-            let unit_bounds = rect_from_center_rad(
+            let diam = unit.rad.0 as u32;
+            let unit_bounds = Rect::from_center(
                 unit.pos.to_screen(state.camera_pos),
-                unit.rad.0 as i32,
-            );
+                diam, diam);
             unit.selected = selection_rect.has_intersection(unit_bounds);
         }
     }
@@ -320,10 +320,9 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
         }
 
         // Draw unit.
-        let bounds = rect_from_center_rad(
-            unit.pos.to_screen(state.camera_pos),
-            unit.rad.0 as i32,
-        );
+        let diam = unit.rad.0 as u32 * 2;
+        let bounds = Rect::from_center(
+            unit.pos.to_screen(state.camera_pos), diam, diam);
         let _ = state.sprite_sheet.blit_sprite_to_rect(
             unit.sprite_key.as_str(), canvas, bounds);
 
@@ -350,7 +349,8 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
 
 fn draw_waypoint(canvas: &mut Canvas<Window>, p: ScreenPoint) {
     canvas.set_draw_color(WAYPOINT_COLOR);
-    let _ = canvas.draw_rect(rect_from_center_rad(p, WAYPOINT_RAD));
+    let _ = canvas.draw_rect(
+        Rect::from_center(p, WAYPOINT_DIAM, WAYPOINT_DIAM));
 }
 
 fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
@@ -361,11 +361,4 @@ fn rect_from_points(p1: ScreenPoint, p2: ScreenPoint) -> Rect {
     Rect::new(
         xmin, ymin,
         (xmax-xmin) as u32, (ymax-ymin) as u32)
-}
-
-fn rect_from_center_rad(p: ScreenPoint, rad: i32) -> Rect {
-    Rect::new(
-        p.x() - rad, p.y() - rad,
-        (rad*2) as u32, (rad*2) as u32
-    )
 }
