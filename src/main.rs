@@ -319,16 +319,11 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
             }
         }
 
-        let rad = unit.rad;
-        let top_left = unit.pos - WorldPoint::new(rad, rad);
-        let top_left_scr = top_left.to_screen(state.camera_pos);
-        let diam = unit.rad.0 * 2.;
-        let bounds = Rect::new(
-            top_left_scr.x.0, top_left_scr.y.0,
-            diam as u32, diam as u32
-        );
-
         // Draw unit.
+        let bounds = rect_from_center_rad(
+            unit.pos.to_screen(state.camera_pos),
+            unit.rad.0 as i32,
+        );
         let _ = state.sprite_sheet.blit_sprite_to_rect(
             unit.sprite_key.as_str(), canvas, bounds);
 
