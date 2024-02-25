@@ -1,3 +1,5 @@
+use sdl2::keyboard::Keycode;
+
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
@@ -21,7 +23,8 @@ impl State {
     let newt = "newt_gingrich".to_string();
     State {
       units: vec![
-        Unit::new(Coord(300.), Coord(250.), Coord(16.), newt.clone()),
+        Unit::new(Point::new(Coord(300.), Coord(250.)),
+          Coord(16.), newt.clone()),
       ],
 
       map: Map {
@@ -76,17 +79,19 @@ pub struct Unit {
   pub waypoints: VecDeque<Point>,
   pub base_speed: Coord,
   pub sprite_key: SpriteKey,
+  pub abilities: Vec<Box<dyn Ability>>,
 }
 
 impl Unit {
-  pub fn new(x: Coord, y: Coord, rad: Coord, sprite_key: SpriteKey) -> Unit {
+  pub fn new(pos: Point, rad: Coord, sprite_key: SpriteKey) -> Unit {
     Unit {
-      pos: Point::new(x, y),
+      pos,
       rad,
       selected: false,
       waypoints: VecDeque::new(),
       base_speed: Coord(1.),
       sprite_key,
+      abilities: vec![],
     }
   }
 
@@ -175,4 +180,18 @@ impl Unit {
   }
 }
 
+pub trait Ability {
+  fn keycode(&self) -> Keycode;
+  fn cast(&self, state: &mut State, target: Point);
+}
+
+pub struct AbilityBuild {}
+
+impl Ability for AbilityBuild {
+  fn keycode(&self) -> Keycode { Keycode::B }
+
+  fn cast(&self, state: &mut State, target: Point) {
+    state.units.push(Unit::new(
+      target, Coord(16.), "newt_gingrich".to_string()));
+  }
 }
