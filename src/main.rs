@@ -23,6 +23,7 @@ use sdl2::ttf::Font;
 use sdl2::video::Window;
 
 use std::process::exit;
+use std::rc::Rc;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -74,6 +75,7 @@ struct State<'a, 'b> {
     key_state: KeyState,
     camera_pos: WorldPoint,
     window_pos: DisplayPoint,
+    mouse_pos:  WindowPoint,
 }
 
 impl<'a, 'b> State<'a, 'b> {
@@ -95,6 +97,8 @@ impl<'a, 'b> State<'a, 'b> {
             camera_pos: WorldPoint::new(WorldCoord(0.), WorldCoord(0.)),
             // This is wrong, but will be set on the first WindowMove event.
             window_pos: DisplayPoint::new(0, 0),
+            // This is wrong, but will be set on the next MouseMotion event.
+            mouse_pos: WindowPoint::new(0, 0),
         }
     }
 
@@ -105,11 +109,12 @@ impl<'a, 'b> State<'a, 'b> {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 enum CursorState {
     None,
     BoxSelect(BoxSelect),
     CameraDrag,
+    AbilitySelected(Rc<dyn game::Ability>),
 }
 
 #[derive(Clone, Copy)]
@@ -242,10 +247,20 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Left, ..} => {
             let scr_click = WindowPoint::new(x, y);
             let from = scr_click.to_world(state.camera_pos());
-            state.cursor_state = CursorState::BoxSelect(BoxSelect {
-                from,
-                to: from,
-            });
+            match &state.cursor_state {
+                CursorState::AbilitySelected(ability) => {
+                    ability.cast(
+                        &mut state.game,
+                        state.mouse_pos.to_world(state.camera_pos));
+                    state.cursor_state = CursorState::None;
+                },
+                _ => {
+                    state.cursor_state = CursorState::BoxSelect(BoxSelect {
+                        from,
+                        to: from,
+                    });
+                },
+            }
         },
         Event::MouseButtonUp {x, y, mouse_btn: MouseButton::Left, ..} => {
             // Select units that are in the box.
@@ -285,6 +300,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
 
         Event::MouseMotion {x, y, xrel, yrel, ..} => {
             let camera_pos = state.camera_pos();
+            state.mouse_pos = WindowPoint::new(x, y);
             match &mut state.cursor_state {
                 CursorState::BoxSelect(box_select) => {
                     box_select.to = WindowPoint::new(x, y)
@@ -296,6 +312,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                         y: WorldCoord(yrel as f32),
                     };
                 },
+                CursorState::AbilitySelected(_) => {},
                 CursorState::None => {},
             }
         },
@@ -328,7 +345,8 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
 
                 Some(keycode) => {
                     // If the key corresponds to a usable ability on a selected
-                    // unit, cast it.
+                    // unit, go into the AbilitySelected state, so that it will
+                    // cast on the next click.
                     let mut ability = None;
                     for unit in state.game.units.iter() {
                         if !unit.selected { continue }
@@ -339,10 +357,8 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                         }
                     }
                     if let Some(ability) = ability {
-                        ability.cast(
-                            &mut state.game,
-                            WorldPoint::new(
-                                WorldCoord(100.), WorldCoord(100.)));
+                        state.cursor_state =
+                            CursorState::AbilitySelected(ability);
                     }
                 },
 
@@ -447,6 +463,23 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
                 &texture, None, Rect::new(0, 0, bounds.width, bounds.height))
                 .expect("couldn't copy text texture to canvas");
         }
+    }
+
+    if let CursorState::AbilitySelected(ability) = &state.cursor_state {
+        let surface = state.font.render(ability.name())
+            .solid(COLOR_WHITE)
+            .expect("couldn't render text");
+        let texture_creator = canvas.texture_creator();
+        let texture = texture_creator
+            .create_texture_from_surface(&surface)
+            .expect("couldn't create texture from text surface");
+
+        let bounds = texture.query();
+        canvas.copy(
+            &texture, None, Rect::new(
+                0, (WINDOW_HEIGHT - bounds.height) as i32,
+                bounds.width, bounds.height))
+            .expect("couldn't copy texture to canvas");
     }
 }
 
