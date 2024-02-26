@@ -60,15 +60,20 @@ const DISPLAY_BR_X:  i32 = 3202 + WINDOW_WIDTH as i32;
 const DISPLAY_BR_Y:  i32 = 1256 + WINDOW_HEIGHT as i32;
 
 struct State<'a, 'b> {
+    // "Immutable" stuff.
+    sprite_sheet: SpriteSheet<'a>,
+    font: Font<'b, 'static>,
+    display_bounds: DisplayBounds,
+
+    // State of the game.
     running: bool,
     game: game::State,
-    drag_state: DragState,
-    sprite_sheet: SpriteSheet<'a>,
+
+    // Interaction state.
+    cursor_state: CursorState,
+    key_state: KeyState,
     camera_pos: WorldPoint,
     window_pos: DisplayPoint,
-    display_bounds: DisplayBounds,
-    input_state: InputState,
-    font: Font<'b, 'static>,
 }
 
 impl<'a, 'b> State<'a, 'b> {
@@ -80,12 +85,12 @@ impl<'a, 'b> State<'a, 'b> {
         State {
             running: true,
             game: game::State::new(),
-            drag_state: DragState::None,
+            cursor_state: CursorState::None,
             sprite_sheet,
             camera_pos: WorldPoint::new(WorldCoord(0.), WorldCoord(0.)),
             window_pos: DisplayPoint::new(0, 0),
             display_bounds,
-            input_state: InputState::new(),
+            key_state: KeyState::new(),
             font,
         }
     }
@@ -98,7 +103,7 @@ impl<'a, 'b> State<'a, 'b> {
 }
 
 #[derive(Clone, Copy)]
-enum DragState {
+enum CursorState {
     None,
     BoxSelect(BoxSelect),
     CameraDrag,
@@ -118,7 +123,7 @@ struct DisplayBounds {
     height: u32,
 }
 
-struct InputState {
+struct KeyState {
     left_ctrl_down: bool,
     right_ctrl_down: bool,
     left_shift_down: bool,
@@ -128,9 +133,9 @@ struct InputState {
 }
 
 #[allow(dead_code)]
-impl InputState {
-    pub fn new() -> InputState {
-        InputState {
+impl KeyState {
+    pub fn new() -> KeyState {
+        KeyState {
             left_ctrl_down: false,
             right_ctrl_down: false,
             left_shift_down: false,
@@ -234,17 +239,17 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Left, ..} => {
             let scr_click = WindowPoint::new(x, y);
             let from = scr_click.to_world(state.camera_pos());
-            state.drag_state = DragState::BoxSelect(BoxSelect {
+            state.cursor_state = CursorState::BoxSelect(BoxSelect {
                 from,
                 to: from,
             });
         },
         Event::MouseButtonUp {x, y, mouse_btn: MouseButton::Left, ..} => {
             // Select units that are in the box.
-            if let DragState::BoxSelect(box_select) = state.drag_state {
+            if let CursorState::BoxSelect(box_select) = state.cursor_state {
                 box_select.resolve(WindowPoint::new(x, y), state);
             }
-            state.drag_state = DragState::None;
+            state.cursor_state = CursorState::None;
         },
 
         // Right mouse button -- issue or queue move command.
@@ -253,7 +258,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                 .to_world(state.camera_pos());
             for unit in state.game.units.iter_mut() {
                 if unit.selected {
-                    if !state.input_state.shift() {
+                    if !state.key_state.shift() {
                         unit.waypoints.clear();
                     }
                     unit.pathfind(&state.game.map, click_pos);
@@ -264,36 +269,36 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
         // Middle mouse down/up: drag view.
         Event::MouseButtonDown {x, y, mouse_btn: MouseButton::Middle, .. } => {
             // End box-select if you middle mouse click-n-drag.
-            if let DragState::BoxSelect(box_select) = state.drag_state {
+            if let CursorState::BoxSelect(box_select) = state.cursor_state {
                 box_select.resolve(WindowPoint::new(x, y), state);
             }
-            state.drag_state = DragState::CameraDrag;
+            state.cursor_state = CursorState::CameraDrag;
         },
         Event::MouseButtonUp {mouse_btn: MouseButton::Middle, .. } => {
-            if let DragState::CameraDrag = &state.drag_state {
-                state.drag_state = DragState::None;
+            if let CursorState::CameraDrag = &state.cursor_state {
+                state.cursor_state = CursorState::None;
             }
         },
 
         Event::MouseMotion {x, y, xrel, yrel, ..} => {
             let camera_pos = state.camera_pos();
-            match &mut state.drag_state {
-                DragState::BoxSelect(box_select) => {
+            match &mut state.cursor_state {
+                CursorState::BoxSelect(box_select) => {
                     box_select.to = WindowPoint::new(x, y)
                         .to_world(camera_pos);
                 },
-                DragState::CameraDrag => {
+                CursorState::CameraDrag => {
                     state.camera_pos -= WorldPoint {
                         x: WorldCoord(xrel as f32),
                         y: WorldCoord(yrel as f32),
                     };
                 },
-                DragState::None => {},
+                CursorState::None => {},
             }
         },
 
         Event::KeyDown {repeat: false, keycode, ..} => {
-            let ist = &mut state.input_state;
+            let ist = &mut state.key_state;
             match keycode {
                 Some(Keycode::LCtrl) => { ist.left_ctrl_down = true; }
                 Some(Keycode::RCtrl) => { ist.right_ctrl_down = true; }
@@ -342,7 +347,7 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
             }
         },
         Event::KeyUp {keycode, ..} => {
-            let ist = &mut state.input_state;
+            let ist = &mut state.key_state;
             match keycode {
                 Some(Keycode::LCtrl) => { ist.left_ctrl_down = false; }
                 Some(Keycode::RCtrl) => { ist.right_ctrl_down = false; }
@@ -409,7 +414,7 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     }
 
     // Draw box-selection box.
-    if let DragState::BoxSelect(box_select) = &state.drag_state {
+    if let CursorState::BoxSelect(box_select) = &state.cursor_state {
         canvas.set_draw_color(DRAG_PERIMETER_COLOR);
         let _ = canvas.draw_rect(rect_from_points(
             box_select.from.to_window(state.camera_pos()),
