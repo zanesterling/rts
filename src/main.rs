@@ -83,15 +83,18 @@ impl<'a, 'b> State<'a, 'b> {
         font: Font<'f, 'static>
     ) -> State<'s, 'f> {
         State {
+            sprite_sheet,
+            font,
+            display_bounds,
+
             running: true,
             game: game::State::new(),
+
             cursor_state: CursorState::None,
-            sprite_sheet,
-            camera_pos: WorldPoint::new(WorldCoord(0.), WorldCoord(0.)),
-            window_pos: DisplayPoint::new(0, 0),
-            display_bounds,
             key_state: KeyState::new(),
-            font,
+            camera_pos: WorldPoint::new(WorldCoord(0.), WorldCoord(0.)),
+            // This is wrong, but will be set on the first WindowMove event.
+            window_pos: DisplayPoint::new(0, 0),
         }
     }
 
