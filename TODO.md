@@ -4,10 +4,10 @@
 	- [X] grid pathfinding
 	- [ ] circle-based collision detection
 	- [ ] grid-free pathfinding
-- [ ] Abilities!
-	- [ ] representation for abilities
-	- [ ] number-control interface
-	- [ ] display for abilities
+- [-] Abilities!
+	- [X] representation for abilities
+	- [X] key-control interface
+	- [X] display for abilities
 	- [ ] click interface
 - [ ] Structures
 	- [ ] building structures
