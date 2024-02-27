@@ -495,61 +495,42 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     }
 
     // Draw abilities, if there are any selected units.
-    //
-    // TODO: Clean up this code.
-    // This is intensely janky and low-res, and it's creating a new surface
-    // every single frame for each ability that a selected unit has.
     let unit = state.game.units.iter().find(|unit| unit.selected);
     if let Some(unit) = unit {
         for ability in unit.abilities.iter() {
             let text = format!("[{}] {}", ability.keycode(), ability.name());
-            let surface = state
-                .font
-                .render(text.as_str())
-                .solid(COLOR_WHITE)
-                .expect("couldn't render text");
-            let texture_creator = canvas.texture_creator();
-            let texture = texture_creator
-                .create_texture_from_surface(&surface)
-                .expect("couldn't create texture from text surface");
-
-            let bounds = texture.query();
-            canvas
-                .copy(&texture, None, Rect::new(0, 0, bounds.width, bounds.height))
-                .expect("couldn't copy text texture to canvas");
+            let top_left = WindowPoint::new(0, 0);
+            draw_text(canvas, top_left, &state.font, &text)
+                .expect("couldn't draw units' abilities");
         }
     }
 
     if let CursorState::AbilitySelected(ability) = &state.cursor_state {
-        let surface = state
-            .font
-            .render(ability.name())
-            .solid(COLOR_WHITE)
-            .expect("couldn't render text");
-        let texture_creator = canvas.texture_creator();
-        let texture = texture_creator
-            .create_texture_from_surface(&surface)
-            .expect("couldn't create texture from text surface");
-
-        let bounds = texture.query();
-        canvas
-            .copy(
-                &texture,
-                None,
-                Rect::new(
-                    0,
-                    (WINDOW_HEIGHT - bounds.height) as i32,
-                    bounds.width,
-                    bounds.height,
-                ),
-            )
-            .expect("couldn't copy texture to canvas");
+        let top_left= WindowPoint::new(0, WINDOW_HEIGHT as i32 - state.font.height());
+        draw_text(canvas, top_left, &state.font, ability.name())
+            .expect("couldn't draw active ability");
     }
 }
 
 fn draw_waypoint(canvas: &mut Canvas<Window>, p: WindowPoint) {
     canvas.set_draw_color(WAYPOINT_COLOR);
     let _ = canvas.draw_rect(rect_from_center_rad(p, WAYPOINT_RAD));
+}
+
+// TODO: Clean up this code.
+// This is intensely janky and low-res, and it's creating a new surface
+// every single frame for each ability that a selected unit has.
+fn draw_text(canvas: &mut Canvas<Window>, p: WindowPoint, font: &Font, text: &str) -> Result<(), String> {
+    let surface = font.render(text).solid(COLOR_WHITE)
+        .map_err(|e| format!("couldn't render text: {}", e))?;
+    let texture_creator = canvas.texture_creator();
+    let texture = texture_creator.create_texture_from_surface(&surface)
+        .map_err(|e| format!("couldn't create texture: {}", e))?;
+
+    let bounds = texture.query();
+    let target_rect = Rect::new(p.x, p.y, bounds.width, bounds.height);
+    canvas.copy(&texture, None, target_rect)
+        .map_err(|e| format!("couldn't copy texture to canvas: {}", e))
 }
 
 fn rect_from_points(p1: WindowPoint, p2: WindowPoint) -> Rect {
