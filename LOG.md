@@ -1,5 +1,9 @@
 # Development log
 
+## 2024-02-26
+Today I just made a tiny improvement: if you can't pathfind to a location, move
+directly towards it instead. Otherwise having a melt-brain day again.
+
 ## 2024-02-25
 Today I did some refactoring, so now it's a bit harder to trip up when doing
 coordinate space conversions. Basically just made a couple more helper
