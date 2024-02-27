@@ -279,7 +279,11 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                     if !state.key_state.shift() {
                         unit.waypoints.clear();
                     }
-                    unit.pathfind(&state.game.map, click_pos);
+                    let found_path =
+                        unit.pathfind(&state.game.map, click_pos);
+                    if !found_path {
+                        unit.waypoints.push_back(click_pos);
+                    }
                 }
             }
         },
