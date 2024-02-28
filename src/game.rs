@@ -4,13 +4,9 @@ use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::rc::Rc;
 
-use crate::dimensions::{
-  WorldCoord as Coord,
-  WorldPoint as Point,
-  WorldRect as Rect,
-};
+use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point, WorldRect as Rect};
+use crate::map::{GridTile, Map, TilePoint, ToTilePoint};
 use crate::sprite_sheet::SpriteKey;
-use crate::map::{Map, GridTile, TilePoint, ToTilePoint};
 
 pub struct State {
   pub units: Vec<Unit>,
@@ -23,13 +19,14 @@ impl State {
     let l = GridTile::Obstacle;
     let newt = "newt_gingrich".to_string();
     State {
-      units: vec![
-        Unit::new(Point::new(Coord(300.), Coord(250.)),
-          Coord(16.), newt.clone()),
-      ],
+      units: vec![Unit::new(
+        Point::new(Coord(300.), Coord(250.)),
+        Coord(16.),
+        newt.clone(),
+      )],
 
       map: Map {
-        width:  14,
+        width: 14,
         height: 10,
         grid_tiles: vec![
           o,o,o,o,o,o,o,o,o,o,o,o,o,o,
@@ -56,18 +53,22 @@ impl State {
         let (next_pos, is_last_step) = if to_target.magnitude() < speed {
           (*target, true)
         } else {
-          (unit.pos + to_target.normalized()*speed, false)
+          (unit.pos + to_target.normalized() * speed, false)
         };
 
-        let tiles: Vec<_> = self.map.tiles_overlapping_rect(unit.bounding_box_at(next_pos)).collect();
-        let collision = tiles.iter()
-          .any(|item| item.tile == GridTile::Obstacle);
+        let tiles: Vec<_> = self
+          .map
+          .tiles_overlapping_rect(unit.bounding_box_at(next_pos))
+          .collect();
+        let collision = tiles.iter().any(|item| item.tile == GridTile::Obstacle);
         if collision {
           // TODO: Step up to the wall, but not through it.
         } else {
           unit.pos = next_pos;
         }
-        if is_last_step { unit.waypoints.pop_front(); }
+        if is_last_step {
+          unit.waypoints.pop_front();
+        }
       }
     }
   }
@@ -92,19 +93,23 @@ impl Unit {
       waypoints: VecDeque::new(),
       base_speed: Coord(1.),
       sprite_key,
-      abilities: vec![Rc::new(AbilityBuild{})], // FIXME
+      abilities: vec![Rc::new(AbilityBuild {})], // FIXME
     }
   }
 
-  pub fn speed(&self) -> Coord { self.base_speed }
+  pub fn speed(&self) -> Coord {
+    self.base_speed
+  }
 
-  fn bounding_box(&self) -> Rect { self.bounding_box_at(self.pos) }
+  fn bounding_box(&self) -> Rect {
+    self.bounding_box_at(self.pos)
+  }
   fn bounding_box_at(&self, p: Point) -> Rect {
-    let top_left  = p - Point::new(self.rad, self.rad);
+    let top_left = p - Point::new(self.rad, self.rad);
     Rect {
       top_left,
-      width:  self.rad*Coord(2.),
-      height: self.rad*Coord(2.),
+      width: self.rad * Coord(2.),
+      height: self.rad * Coord(2.),
     }
   }
 
@@ -122,9 +127,11 @@ impl Unit {
   // As a first pass, this is implemented as BFS.
   // TODO: Implement A*.
   pub fn pathfind(&mut self, map: &Map, dest: Point) -> bool {
-    let src = if self.waypoints.is_empty()
-      { self.pos }
-      else { self.waypoints[self.waypoints.len() - 1] };
+    let src = if self.waypoints.is_empty() {
+      self.pos
+    } else {
+      self.waypoints[self.waypoints.len() - 1]
+    };
     let src = src.to_tile_point();
     let dest = dest.to_tile_point();
 
@@ -141,18 +148,25 @@ impl Unit {
     to_visit.push_front(BackPath {
       here: src,
       best_source: src, // Just need to put some value here.
-      path_cost: 0
+      path_cost: 0,
     });
     while !to_visit.is_empty() {
       let point = to_visit.pop_front().unwrap();
-      if visited.contains_key(&point.here) { continue }
+      if visited.contains_key(&point.here) {
+        continue;
+      }
       visited.insert(point.here, point);
-      if point.here == dest { break }
+      if point.here == dest {
+        break;
+      }
       for p in point.here.neighbors4(&map) {
-        let tile_blocked = map.get_tile(p)
+        let tile_blocked = map
+          .get_tile(p)
           .map(|t| t != GridTile::Empty)
           .unwrap_or(true);
-        if tile_blocked { continue }
+        if tile_blocked {
+          continue;
+        }
         to_visit.push_back(BackPath {
           here: p,
           best_source: point.here,
@@ -160,7 +174,9 @@ impl Unit {
         });
       }
     }
-    if !visited.contains_key(&dest) { return false; }
+    if !visited.contains_key(&dest) {
+      return false;
+    }
 
     // Make waypoints for the path found.
     let mut path_reverse = vec![];
@@ -191,11 +207,16 @@ pub struct AbilityBuild {}
 const ABILITY_BUILD_NAME: &str = "Build";
 
 impl Ability for AbilityBuild {
-  fn keycode(&self) -> Keycode { Keycode::B }
-  fn name(&self) -> &'static str { ABILITY_BUILD_NAME }
+  fn keycode(&self) -> Keycode {
+    Keycode::B
+  }
+  fn name(&self) -> &'static str {
+    ABILITY_BUILD_NAME
+  }
 
   fn cast(&self, state: &mut State, target: Point) {
-    state.units.push(Unit::new(
-      target, Coord(16.), "newt_gingrich".to_string()));
+    state
+      .units
+      .push(Unit::new(target, Coord(16.), "newt_gingrich".to_string()));
   }
 }
