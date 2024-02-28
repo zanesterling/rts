@@ -46,13 +46,13 @@ const WAYPOINT_RAD: u32 = 2;
 const SPRITE_SHEET_PATH: &str = "media/sprite-sheet.sps";
 const SHOW_UNIT_DEBUG_BOXES: bool = false;
 
-// TODO: Do some stuff to pick the right window / let user pick.
-const WINDOW_WIDTH: u32 = 800;
-const WINDOW_HEIGHT: u32 = 600;
+// TODO: Do some stuff to pick the right display / let user pick.
 const DISPLAY_TL_X: i32 = 1524;
 const DISPLAY_TL_Y: i32 = 446;
 const DISPLAY_BR_X: i32 = 3202 + WINDOW_WIDTH as i32;
 const DISPLAY_BR_Y: i32 = 1256 + WINDOW_HEIGHT as i32;
+const WINDOW_WIDTH: u32 = 800;
+const WINDOW_HEIGHT: u32 = 600;
 
 struct State<'a, 'b> {
     // "Immutable" stuff.
