@@ -167,6 +167,16 @@ impl BoxSelect {
       let unit_bounds = rect_from_center_rad(unit.pos.to_window(camera_pos), unit.window_rad());
       unit.selected = selection_rect.has_intersection(unit_bounds);
     }
+    for building in state.game.buildings.iter_mut() {
+      let top_left = building.top_left_pos.to_world_point().to_window(camera_pos);
+      let bounds = Rect::new(
+        top_left.x,
+        top_left.y,
+        building.width * TILE_WIDTH,
+        building.height * TILE_WIDTH,
+      );
+      building.selected = selection_rect.has_intersection(bounds);
+    }
   }
 }
 
@@ -498,6 +508,17 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
       building.height * TILE_WIDTH,
     );
     let _ = canvas.fill_rect(bounds);
+
+    // Draw selection box around the building.
+    if building.selected {
+      canvas.set_draw_color(UNIT_SELECTED_COLOR);
+      let _ = canvas.draw_rect(Rect::new(
+        bounds.x - 3,
+        bounds.y - 3,
+        bounds.width() + 6,
+        bounds.height() + 6,
+      ));
+    }
   }
 
   // Draw box-selection box.

@@ -223,6 +223,8 @@ pub struct Building {
   pub top_left_pos: TilePoint,
   pub width: u32,
   pub height: u32,
+
+  pub selected: bool,
 }
 
 impl Building {
@@ -231,6 +233,8 @@ impl Building {
       top_left_pos,
       width: 1,
       height: 1,
+
+      selected: false,
     }
   }
 }
