@@ -220,6 +220,10 @@ pub struct TilePoint {
 }
 
 impl TilePoint {
+  pub fn new(x: u32, y: u32) -> TilePoint {
+    TilePoint { x, y }
+  }
+
   // TODO: Optimize to be a custom iterator. That way no malloc needed.
   pub fn neighbors4(&self, map: &Map) -> Vec<TilePoint> {
     let (x, y) = (self.x, self.y);

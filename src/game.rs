@@ -10,6 +10,7 @@ use crate::sprite_sheet::SpriteKey;
 
 pub struct State {
   pub units: Vec<Unit>,
+  pub buildings: Vec<Building>,
   pub map: Map,
 }
 
@@ -25,20 +26,17 @@ impl State {
         newt.clone(),
       )],
 
+      buildings: vec![Building::new(TilePoint::new(1, 1))],
+
       map: Map {
         width: 14,
         height: 10,
         grid_tiles: vec![
-          o,o,o,o,o,o,o,o,o,o,o,o,o,o,
-          o,o,o,o,o,o,o,o,o,o,o,o,o,o,
-          o,o,o,o,o,l,l,l,l,l,l,o,o,o,
-          o,o,o,o,o,o,o,o,o,o,l,o,o,o,
-          o,o,o,o,o,o,o,o,l,o,l,o,o,o,
-          o,o,o,o,o,l,l,l,l,o,l,o,o,o,
-          o,o,o,o,o,l,o,o,o,o,l,o,o,o,
-          o,o,o,o,o,l,l,l,l,l,l,o,o,o,
-          o,o,o,o,o,o,o,o,o,o,o,o,o,o,
-          o,o,o,o,o,o,o,o,o,o,o,o,o,o,
+          o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o,
+          o, o, o, l, l, l, l, l, l, o, o, o, o, o, o, o, o, o, o, o, o, o, l, o, o, o, o, o, o, o,
+          o, o, o, o, l, o, l, o, o, o, o, o, o, o, o, l, l, l, l, o, l, o, o, o, o, o, o, o, o, l,
+          o, o, o, o, l, o, o, o, o, o, o, o, o, l, l, l, l, l, l, o, o, o, o, o, o, o, o, o, o, o,
+          o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o,
         ],
       },
     }
@@ -218,5 +216,21 @@ impl Ability for AbilityBuild {
     state
       .units
       .push(Unit::new(target, Coord(16.), "newt_gingrich".to_string()));
+  }
+}
+
+pub struct Building {
+  pub top_left_pos: TilePoint,
+  pub width: u32,
+  pub height: u32,
+}
+
+impl Building {
+  pub fn new(top_left_pos: TilePoint) -> Building {
+    Building {
+      top_left_pos,
+      width: 1,
+      height: 1,
+    }
   }
 }

@@ -38,6 +38,7 @@ const UNIT_SELECTED_COLOR: Color = Color::RGB(80, 250, 123);
 const UNIT_MOVING_COLOR: Color = Color::RGB(189, 147, 249);
 const DRAG_PERIMETER_COLOR: Color = Color::RGB(0, 255, 0);
 const WAYPOINT_COLOR: Color = UNIT_MOVING_COLOR;
+const BUILDING_COLOR: Color = Color::RGB(139, 233, 253);
 
 const COLOR_WHITE: Color = Color::RGB(248, 248, 242);
 
@@ -481,6 +482,22 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
       });
       let _ = canvas.draw_rect(bounds);
     }
+  }
+
+  for building in state.game.buildings.iter() {
+    // Draw building.
+    canvas.set_draw_color(BUILDING_COLOR);
+    let top_left = building
+      .top_left_pos
+      .to_world_point()
+      .to_window(state.camera_pos());
+    let bounds = Rect::new(
+      top_left.x,
+      top_left.y,
+      building.width * TILE_WIDTH,
+      building.height * TILE_WIDTH,
+    );
+    let _ = canvas.fill_rect(bounds);
   }
 
   // Draw box-selection box.
