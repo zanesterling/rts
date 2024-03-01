@@ -28,6 +28,7 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use crate::dimensions::{DisplayPoint, ToWorld, WindowPoint, WorldCoord, WorldPoint};
+use crate::game::AbilityCommon;
 use crate::map::{GridTile, TILE_WIDTH};
 use crate::sprite_sheet::SpriteSheet;
 
@@ -109,7 +110,8 @@ enum CursorState {
   None,
   BoxSelect(BoxSelect),
   CameraDrag,
-  AbilitySelected(Rc<dyn game::Ability>),
+  // TODO: Handle case where it can be unit targeted.
+  AbilitySelected(Rc<dyn game::PointTargetedAbility>),
 }
 
 #[derive(Clone, Copy)]
@@ -404,9 +406,15 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
                 .iter()
                 .filter(|b| b.selected)
                 .find_map(|b| b.abilities.iter().find(|ab| ab.keycode() == keycode))
-            });
+            })
+            .map(|ab| (*ab).clone());
           if let Some(ability) = ability {
-            state.cursor_state = CursorState::AbilitySelected(ability.clone());
+            match ability {
+              game::Ability::NonTargeted(ability) => ability.cast(&mut state.game),
+              game::Ability::PointTargeted(ability) => {
+                state.cursor_state = CursorState::AbilitySelected(ability);
+              }
+            }
           }
         }
 
