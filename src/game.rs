@@ -13,6 +13,7 @@ type UID = u32;
 
 pub struct State {
   pub units: Vec<Unit>,
+  pub unit_types: Vec<UnitType>,
   pub buildings: Vec<Building>,
   pub map: Map,
   pub next_uid: UID,
@@ -24,7 +25,7 @@ impl State {
     let l = GridTile::Obstacle;
     State {
       units: vec![],
-
+      unit_types: vec![],
       buildings: vec![],
 
       map: Map {
@@ -45,13 +46,15 @@ impl State {
 
   pub fn level1() -> State {
     let mut state = State::blank();
-    let newt = "newt_gingrich".to_string();
-    state.make_unit(
-      Point::new(Coord(300.), Coord(250.)),
-      Coord(16.),
-      newt.clone(),
-    );
+    let newt_type = UnitType {
+      name: "Newt",
+      sprite_key: "newt_gingrich".to_string(),
+      radius: Coord(16.),
+      base_speed: Coord(1.),
+    };
+    state.make_unit(newt_type.clone(), Point::new(Coord(300.), Coord(250.)));
     state.make_building(TilePoint::new(1, 1));
+    state.unit_types.push(newt_type);
     state
   }
 
@@ -91,18 +94,16 @@ impl State {
     self.next_uid += 1;
   }
 
-  fn make_unit(&mut self, pos: Point, rad: Coord, sprite_key: SpriteKey) {
+  fn make_unit(&mut self, unit_type: UnitType, pos: Point) {
     let uid = self.next_uid;
     self.incr_uid();
     self.units.push(Unit {
       uid,
       pos,
-      rad,
+      unit_type,
       selected: false,
       waypoints: VecDeque::new(),
-      base_speed: Coord(1.),
-      sprite_key,
-      abilities: vec![Rc::new(AbilityBuild {})], // TODO: Make unit types
+      abilities: vec![Rc::new(AbilityBuild {})], // TODO: Make settable by unit type
     });
   }
 
@@ -124,28 +125,30 @@ impl State {
 pub struct Unit {
   pub uid: UID,
   pub pos: Point,
-  pub rad: Coord,
+  pub unit_type: UnitType,
   pub selected: bool,
   pub waypoints: VecDeque<Point>,
-  pub base_speed: Coord,
-  pub sprite_key: SpriteKey,
   pub abilities: Vec<Rc<dyn Ability>>,
 }
 
 impl Unit {
-  pub fn speed(&self) -> Coord {
-    self.base_speed
+  fn speed(&self) -> Coord {
+    self.unit_type.base_speed
+  }
+
+  fn rad(&self) -> Coord {
+    self.unit_type.radius
   }
 
   fn bounding_box(&self) -> Rect {
     self.bounding_box_at(self.pos)
   }
   fn bounding_box_at(&self, p: Point) -> Rect {
-    let top_left = p - Point::new(self.rad, self.rad);
+    let top_left = p - Point::new(self.rad(), self.rad());
     Rect {
       top_left,
-      width: self.rad * Coord(2.),
-      height: self.rad * Coord(2.),
+      width: self.rad() * Coord(2.),
+      height: self.rad() * Coord(2.),
     }
   }
 
@@ -229,8 +232,18 @@ impl Unit {
   }
 
   pub fn window_rad(&self) -> u32 {
-    self.rad.0 as u32
+    self.rad().0 as u32
   }
+}
+
+// Sort of a factory for units. Stores some properties of the unit so that one
+// can make more of a type without closures.
+#[derive(Clone)]
+pub struct UnitType {
+  pub name: &'static str,
+  pub sprite_key: SpriteKey,
+  pub radius: Coord,
+  pub base_speed: Coord,
 }
 
 pub trait Ability {
@@ -251,7 +264,7 @@ impl Ability for AbilityBuild {
   }
 
   fn cast(&self, state: &mut State, target: Point) {
-    state.make_unit(target, Coord(16.), "newt_gingrich".to_string());
+    state.make_unit(state.unit_types[0].clone(), target);
   }
 }
 

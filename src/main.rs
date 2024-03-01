@@ -477,9 +477,10 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
 
     // Draw unit.
     let bounds = rect_from_center_rad(unit.pos.to_window(state.camera_pos()), unit.window_rad());
-    let _ = state
-      .sprite_sheet
-      .blit_sprite_to_rect(unit.sprite_key.as_str(), canvas, bounds);
+    let _ =
+      state
+        .sprite_sheet
+        .blit_sprite_to_rect(unit.unit_type.sprite_key.as_str(), canvas, bounds);
 
     // Draw debug box around the unit.
     if SHOW_UNIT_DEBUG_BOXES || unit.selected {
