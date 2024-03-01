@@ -103,7 +103,8 @@ impl State {
       unit_type,
       selected: false,
       waypoints: VecDeque::new(),
-      abilities: vec![Rc::new(AbilityBuild {})], // TODO: Make settable by unit type
+      // TODO: Make settable by unit type
+      abilities: vec![Rc::new(AbilityBuild { caster: uid })],
     });
   }
 
@@ -249,18 +250,25 @@ pub struct UnitType {
 pub trait Ability {
   fn keycode(&self) -> Keycode;
   fn name(&self) -> &'static str;
+  // TODO: When units can die we should use this to stop trying to cast
+  // active abilities from the dead unit.
+  fn caster(&self) -> UID;
   fn cast(&self, state: &mut State, target: Point);
 }
 
-pub struct AbilityBuild {}
-const ABILITY_BUILD_NAME: &str = "Build";
+pub struct AbilityBuild {
+  caster: UID,
+}
 
 impl Ability for AbilityBuild {
   fn keycode(&self) -> Keycode {
     Keycode::B
   }
   fn name(&self) -> &'static str {
-    ABILITY_BUILD_NAME
+    "Build"
+  }
+  fn caster(&self) -> UID {
+    self.caster
   }
 
   fn cast(&self, state: &mut State, target: Point) {
