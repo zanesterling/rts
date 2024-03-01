@@ -13,6 +13,7 @@ $ cargo run -r
 ### macOS
 ```
 $ brew install cmake
-$ brew install sdl2_image sdl2_ttf
+$ brew install sdl2 sdl2_image sdl2_ttf
+$ export LIBRARY_PATH="$LIBRARY_PATH:$(brew --prefix)/lib"
 $ cargo run -r
 ```
