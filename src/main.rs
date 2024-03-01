@@ -380,20 +380,6 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
           ist.right_alt_down = true;
         }
 
-        Some(Keycode::R) => {
-          let mut thread_rng = rand::thread_rng();
-          let x = thread_rng.gen_range(DISPLAY_TL_X..DISPLAY_BR_X - WINDOW_WIDTH as i32);
-          let y = thread_rng.gen_range(DISPLAY_TL_Y..DISPLAY_BR_Y - WINDOW_HEIGHT as i32);
-          canvas.window_mut().set_position(
-            sdl2::video::WindowPos::Positioned(x),
-            sdl2::video::WindowPos::Positioned(y),
-          );
-        }
-        Some(Keycode::P) => {
-          let (x, y) = canvas.window().position();
-          println!("({}, {})", x, y);
-        }
-
         Some(keycode) => {
           // If the key corresponds to a usable ability on a selected
           // unit, go into the AbilitySelected state, so that it will
