@@ -396,7 +396,15 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
             .units
             .iter()
             .filter(|u| u.selected)
-            .find_map(|u| u.abilities.iter().find(|ab| ab.keycode() == keycode));
+            .find_map(|u| u.abilities.iter().find(|ab| ab.keycode() == keycode))
+            .or_else(|| {
+              state
+                .game
+                .buildings
+                .iter()
+                .filter(|b| b.selected)
+                .find_map(|b| b.abilities.iter().find(|ab| ab.keycode() == keycode))
+            });
           if let Some(ability) = ability {
             state.cursor_state = CursorState::AbilitySelected(ability.clone());
           }
