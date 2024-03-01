@@ -58,6 +58,9 @@ const DISPLAY_BR_Y: i32 = 1256 + WINDOW_HEIGHT as i32;
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
 
+const BUILDING_SELECTION_OFFSET: u32 = 3;
+const TRAIN_QUEUE_WIDTH: u32 = 8;
+
 struct State<'a, 'b> {
   // "Immutable" stuff.
   sprite_sheet: SpriteSheet<'a>,
@@ -528,10 +531,23 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     if building.selected {
       canvas.set_draw_color(UNIT_SELECTED_COLOR);
       let _ = canvas.draw_rect(Rect::new(
-        bounds.x - 3,
-        bounds.y - 3,
-        bounds.width() + 6,
-        bounds.height() + 6,
+        bounds.x - BUILDING_SELECTION_OFFSET as i32,
+        bounds.y - BUILDING_SELECTION_OFFSET as i32,
+        bounds.width() + 2 * BUILDING_SELECTION_OFFSET,
+        bounds.height() + 2 * BUILDING_SELECTION_OFFSET,
+      ));
+    }
+
+    // Draw the training queue.
+    for (i, _train) in building.train_queue.iter().enumerate() {
+      let top_left_x = bounds.x + i as i32 * (TRAIN_QUEUE_WIDTH + 2) as i32;
+      let top_left_y = bounds.y + bounds.height() as i32 + BUILDING_SELECTION_OFFSET as i32;
+      canvas.set_draw_color(BUILDING_COLOR);
+      let _ = canvas.fill_rect(Rect::new(
+        top_left_x,
+        top_left_y,
+        TRAIN_QUEUE_WIDTH,
+        TRAIN_QUEUE_WIDTH,
       ));
     }
   }
