@@ -31,6 +31,20 @@ mutation of the unit by other code while the ability exists. A solution might
 be to give each unit a UID. That way the ability can store just the UID, and
 look up its caster or target when it's cast.
 
+---
+
+Done! Buildings can train units. I did it as described above, by introducing
+UIDs for units and buildings. I also had to add a concept of UnitType, so that
+the building knows what the unit's fields should look like.
+
+There are still some rough edges that I'd like to sand off:
+- buildings don't show the status of training in progress,
+- you have to press the train button and then click, instead of just pressing
+  the train button,
+- and units all get put in the same spot. If you queue up a few units and then
+  sit back, the game will put them all on top of each other. I might not fix
+  this one until I have some idea how I want to handle collisions.
+
 ## 2024-02-29
 Today adding buildings. A lot of the logic should be same as units: they can be
 selected, they have abilities ... probably other things are shared too.
