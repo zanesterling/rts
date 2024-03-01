@@ -8,11 +8,14 @@ use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point, WorldRect as R
 use crate::map::{GridTile, Map, TilePoint, ToTilePoint};
 use crate::sprite_sheet::SpriteKey;
 
+// UIDs are used to refer uniquely to buildings or units.
+type UID = u32;
+
 pub struct State {
   pub units: Vec<Unit>,
   pub buildings: Vec<Building>,
   pub map: Map,
-  pub next_uid: UnitUid,
+  pub next_uid: UID,
 }
 
 impl State {
@@ -22,7 +25,7 @@ impl State {
     State {
       units: vec![],
 
-      buildings: vec![Building::new(TilePoint::new(1, 1))],
+      buildings: vec![],
 
       map: Map {
         width: 14,
@@ -48,6 +51,7 @@ impl State {
       Coord(16.),
       newt.clone(),
     );
+    state.make_building(TilePoint::new(1, 1));
     state
   }
 
@@ -80,9 +84,16 @@ impl State {
     }
   }
 
+  fn incr_uid(&mut self) {
+    if self.next_uid == UID::MAX {
+      println!("error: ran out of UIDs!");
+    }
+    self.next_uid += 1;
+  }
+
   fn make_unit(&mut self, pos: Point, rad: Coord, sprite_key: SpriteKey) {
     let uid = self.next_uid;
-    self.next_uid += 1;
+    self.incr_uid();
     self.units.push(Unit {
       uid,
       pos,
@@ -94,12 +105,24 @@ impl State {
       abilities: vec![Rc::new(AbilityBuild {})], // TODO: Make unit types
     });
   }
+
+  fn make_building(&mut self, top_left_pos: TilePoint) {
+    let uid = self.next_uid;
+    self.incr_uid();
+    self.buildings.push(Building {
+      uid,
+
+      top_left_pos,
+      width: 1,
+      height: 1,
+
+      selected: false,
+    });
+  }
 }
 
-type UnitUid = u32;
-
 pub struct Unit {
-  pub uid: UnitUid,
+  pub uid: UID,
   pub pos: Point,
   pub rad: Coord,
   pub selected: bool,
@@ -233,21 +256,11 @@ impl Ability for AbilityBuild {
 }
 
 pub struct Building {
+  pub uid: UID,
+
   pub top_left_pos: TilePoint,
   pub width: u32,
   pub height: u32,
 
   pub selected: bool,
-}
-
-impl Building {
-  pub fn new(top_left_pos: TilePoint) -> Building {
-    Building {
-      top_left_pos,
-      width: 1,
-      height: 1,
-
-      selected: false,
-    }
-  }
 }
