@@ -3,10 +3,16 @@ use sdl2::keyboard::Keycode;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::rc::Rc;
+use std::time::Duration;
 
 use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point, WorldRect as Rect};
 use crate::map::{GridTile, Map, TilePoint, ToTilePoint};
 use crate::sprite_sheet::SpriteKey;
+
+// TODO: Split real time and game time apart. This is necessary for engine
+// stability and to support multiplayer and replays.
+type GameTime = ();
+type GameDur = Duration;
 
 // UIDs are used to refer uniquely to buildings or units.
 type UID = u32;
@@ -52,9 +58,9 @@ impl State {
       radius: Coord(16.),
       base_speed: Coord(1.),
     };
-    state.make_unit(newt_type.clone(), Point::new(Coord(300.), Coord(250.)));
+    state.unit_types.push(newt_type.clone());
+    state.make_unit(newt_type, Point::new(Coord(300.), Coord(250.)));
     state.make_building(TilePoint::new(1, 1));
-    state.unit_types.push(newt_type);
     state
   }
 
@@ -87,16 +93,17 @@ impl State {
     }
   }
 
-  fn incr_uid(&mut self) {
+  fn next_uid(&mut self) -> UID {
+    let uid = self.next_uid;
     if self.next_uid == UID::MAX {
       println!("error: ran out of UIDs!");
     }
     self.next_uid += 1;
+    uid
   }
 
   fn make_unit(&mut self, unit_type: UnitType, pos: Point) {
-    let uid = self.next_uid;
-    self.incr_uid();
+    let uid = self.next_uid();
     self.units.push(Unit {
       uid,
       pos,
@@ -113,8 +120,7 @@ impl State {
   }
 
   fn make_building(&mut self, top_left_pos: TilePoint) {
-    let uid = self.next_uid;
-    self.incr_uid();
+    let uid = self.next_uid();
     self.buildings.push(Building {
       uid,
 
@@ -123,6 +129,16 @@ impl State {
       height: 1,
 
       selected: false,
+
+      train_queue: VecDeque::new(),
+      train_queue_max_len: 5,
+
+      abilities: vec![Rc::new(AbilityTrain {
+        caster: uid,
+        // TODO: Avoid this array access. One way to do it is to define units in
+        // a text file and validate them on load.
+        unit_type: self.unit_types[0].clone(),
+      })],
     });
   }
 
@@ -253,6 +269,11 @@ pub struct Building {
   pub height: u32,
 
   pub selected: bool,
+
+  pub train_queue: VecDeque<UnitTraining>,
+  pub train_queue_max_len: usize,
+
+  pub abilities: Vec<Rc<dyn Ability>>,
 }
 
 // Sort of a factory for units. Stores some properties of the unit so that one
@@ -292,4 +313,47 @@ impl Ability for AbilityBuild {
   fn cast(&self, state: &mut State, target: Point) {
     state.make_unit(state.unit_types[0].clone(), target);
   }
+}
+
+struct AbilityTrain {
+  caster: UID,
+  unit_type: UnitType,
+}
+
+impl Ability for AbilityTrain {
+  fn caster(&self) -> UID {
+    self.caster
+  }
+
+  fn keycode(&self) -> Keycode {
+    Keycode::T
+  }
+
+  fn name(&self) -> &'static str {
+    "Train unit"
+  }
+
+  fn cast(&self, state: &mut State, _target: Point) {
+    let unit_type = state.unit_types[0].clone();
+    let building = state
+      .get_building(self.caster)
+      // TODO: Make cast() give a result
+      .expect("caster not found when casting ability");
+    let train_dur = Duration::from_secs(3);
+    if building.train_queue_max_len > building.train_queue.len() {
+      building.train_queue.push_back(UnitTraining {
+        unit_type,
+        dur_total: train_dur,
+        dur_left: train_dur,
+      });
+    } else {
+      // TODO: Signal to the user that casting failed.
+    }
+  }
+}
+
+pub struct UnitTraining {
+  pub unit_type: UnitType,
+  pub dur_total: GameDur,
+  pub dur_left: GameDur,
 }
