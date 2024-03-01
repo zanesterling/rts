@@ -1,5 +1,36 @@
 # Development log
 
+## 2024-02-30
+I have a day off today! I'm going to try to work on some big chunk.
+
+Yesterday I added buildings that are selectable. I started to give them
+abilities like "train a unit", but discovered that my abstraction for abilities
+doesn't quite match this case. The abstraction as it stands is:
+
+```rust
+trait Ability {
+    fn name(&self) -> &'static str;
+    fn keycode(&self) -> Keycode;
+    fn cast(&self, &mut game::State, WorldPoint);
+}
+```
+
+This fits nicely with point- or area-targeted abilities, and could be made to
+work with unit-targeted abilities. But it doesn't fit with non-targeted or
+auto-self-targeted abilities, like training a unit. There are two issues.
+
+The smaller issue is that the interaction code I've written around this trait
+assumes that the trait is point/area-targeted, and so includes two states for
+first selecting the ability and then casting it. That could be fixed by
+adding another boolean to the trait, or using subtraits or enums.
+
+The larger issue is that in order for an ability to make changes to a specific
+unit, it must keep a `&mut` to that unit. That would break all sorts of things,
+starting with tracking the ability's lifetime and continuing into blocking any
+mutation of the unit by other code while the ability exists. A solution might
+be to give each unit a UID. That way the ability can store just the UID, and
+look up its caster or target when it's cast.
+
 ## 2024-02-29
 Today adding buildings. A lot of the logic should be same as units: they can be
 selected, they have abilities ... probably other things are shared too.
