@@ -4,7 +4,7 @@
 Today adding buildings. A lot of the logic should be same as units: they can be
 selected, they have abilities ... probably other things are shared too.
 
-## 2024-02-26
+## 2024-02-27
 Today I just made a tiny improvement: if you can't pathfind to a location, move
 directly towards it instead. Otherwise having a melt-brain day again.
 
