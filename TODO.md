@@ -9,9 +9,9 @@
 	- [X] key-control interface
 	- [X] display for abilities
 	- [ ] click interface
-- [ ] Structures
-	- [ ] building structures
-	- [ ] unit production
+- [X] Structures
+	- [ ] making structures
+	- [X] unit production
 	- [ ] research
 	- [ ] choosing active unit (set) out of selected
 - [ ] Resource gathering
