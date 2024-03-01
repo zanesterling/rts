@@ -532,9 +532,18 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
   }
 
   // Draw abilities, if there are any selected units.
+  // TODO: Have a sense of which selected unit is "active", and show abilities from it.
   let unit = state.game.units.iter().find(|unit| unit.selected);
+  let building = state.game.buildings.iter().find(|b| b.selected);
   if let Some(unit) = unit {
     for ability in unit.abilities.iter() {
+      // TODO: Handle multiple abilities. Same for buildings.
+      let text = format!("[{}] {}", ability.keycode(), ability.name());
+      let top_left = WindowPoint::new(0, 0);
+      draw_text(canvas, top_left, &state.font, &text).expect("couldn't draw units' abilities");
+    }
+  } else if let Some(building) = building {
+    for ability in building.abilities.iter() {
       let text = format!("[{}] {}", ability.keycode(), ability.name());
       let top_left = WindowPoint::new(0, 0);
       draw_text(canvas, top_left, &state.font, &text).expect("couldn't draw units' abilities");
