@@ -108,6 +108,10 @@ impl State {
     });
   }
 
+  fn get_unit(&mut self, uid: UID) -> Option<&mut Unit> {
+    self.units.iter_mut().find(|u| u.uid == uid)
+  }
+
   fn make_building(&mut self, top_left_pos: TilePoint) {
     let uid = self.next_uid;
     self.incr_uid();
@@ -120,6 +124,10 @@ impl State {
 
       selected: false,
     });
+  }
+
+  fn get_building(&mut self, uid: UID) -> Option<&mut Building> {
+    self.buildings.iter_mut().find(|b| b.uid == uid)
   }
 }
 
