@@ -45,6 +45,11 @@ There are still some rough edges that I'd like to sand off:
   sit back, the game will put them all on top of each other. I might not fix
   this one until I have some idea how I want to handle collisions.
 
+---
+
+The first two issues mentioned above are now solved. Units are still all put in
+the same spot, but that's okay for now.
+
 ## 2024-02-29
 Today adding buildings. A lot of the logic should be same as units: they can be
 selected, they have abilities ... probably other things are shared too.
