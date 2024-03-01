@@ -3,16 +3,24 @@ use sdl2::keyboard::Keycode;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::rc::Rc;
-use std::time::Duration;
 
 use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point, WorldRect as Rect};
 use crate::map::{GridTile, Map, TilePoint, ToTilePoint};
 use crate::sprite_sheet::SpriteKey;
 
-// TODO: Split real time and game time apart. This is necessary for engine
-// stability and to support multiplayer and replays.
-type GameTime = ();
-type GameDur = Duration;
+const TICKS_PER_SEC: u32 = 24;
+
+#[derive(Clone, Copy)]
+pub struct GameDur {
+  pub ticks: u32,
+}
+impl GameDur {
+  fn from_secs(secs: u32) -> GameDur {
+    GameDur {
+      ticks: secs * TICKS_PER_SEC,
+    }
+  }
+}
 
 // UIDs are used to refer uniquely to buildings or units.
 type UID = u32;
@@ -339,7 +347,7 @@ impl Ability for AbilityTrain {
       .get_building(self.caster)
       // TODO: Make cast() give a result
       .expect("caster not found when casting ability");
-    let train_dur = Duration::from_secs(3);
+    let train_dur = GameDur::from_secs(3);
     if building.train_queue_max_len > building.train_queue.len() {
       building.train_queue.push_back(UnitTraining {
         unit_type,

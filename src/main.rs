@@ -226,6 +226,7 @@ fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
   let mut event_pump = sdl_context.event_pump().unwrap();
   while state.running {
     // Update world.
+    // TODO: Make game ticks operate on a different clock than render ticks.
     state.game.tick();
 
     // Render.
