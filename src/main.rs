@@ -85,7 +85,7 @@ impl<'a, 'b> State<'a, 'b> {
       display_bounds,
 
       running: true,
-      game: game::State::new(),
+      game: game::State::level1(),
 
       cursor_state: CursorState::None,
       key_state: KeyState::new(),

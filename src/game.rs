@@ -12,19 +12,15 @@ pub struct State {
   pub units: Vec<Unit>,
   pub buildings: Vec<Building>,
   pub map: Map,
+  pub next_uid: UnitUid,
 }
 
 impl State {
-  pub fn new() -> State {
+  pub fn blank() -> State {
     let o = GridTile::Empty;
     let l = GridTile::Obstacle;
-    let newt = "newt_gingrich".to_string();
     State {
-      units: vec![Unit::new(
-        Point::new(Coord(300.), Coord(250.)),
-        Coord(16.),
-        newt.clone(),
-      )],
+      units: vec![],
 
       buildings: vec![Building::new(TilePoint::new(1, 1))],
 
@@ -39,7 +35,20 @@ impl State {
           o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o,
         ],
       },
+
+      next_uid: 0,
     }
+  }
+
+  pub fn level1() -> State {
+    let mut state = State::blank();
+    let newt = "newt_gingrich".to_string();
+    state.make_unit(
+      Point::new(Coord(300.), Coord(250.)),
+      Coord(16.),
+      newt.clone(),
+    );
+    state
   }
 
   pub fn tick(&mut self) {
@@ -70,9 +79,27 @@ impl State {
       }
     }
   }
+
+  fn make_unit(&mut self, pos: Point, rad: Coord, sprite_key: SpriteKey) {
+    let uid = self.next_uid;
+    self.next_uid += 1;
+    self.units.push(Unit {
+      uid,
+      pos,
+      rad,
+      selected: false,
+      waypoints: VecDeque::new(),
+      base_speed: Coord(1.),
+      sprite_key,
+      abilities: vec![Rc::new(AbilityBuild {})], // TODO: Make unit types
+    });
+  }
 }
 
+type UnitUid = u32;
+
 pub struct Unit {
+  pub uid: UnitUid,
   pub pos: Point,
   pub rad: Coord,
   pub selected: bool,
@@ -83,18 +110,6 @@ pub struct Unit {
 }
 
 impl Unit {
-  pub fn new(pos: Point, rad: Coord, sprite_key: SpriteKey) -> Unit {
-    Unit {
-      pos,
-      rad,
-      selected: false,
-      waypoints: VecDeque::new(),
-      base_speed: Coord(1.),
-      sprite_key,
-      abilities: vec![Rc::new(AbilityBuild {})], // FIXME
-    }
-  }
-
   pub fn speed(&self) -> Coord {
     self.base_speed
   }
@@ -213,9 +228,7 @@ impl Ability for AbilityBuild {
   }
 
   fn cast(&self, state: &mut State, target: Point) {
-    state
-      .units
-      .push(Unit::new(target, Coord(16.), "newt_gingrich".to_string()));
+    state.make_unit(target, Coord(16.), "newt_gingrich".to_string());
   }
 }
 
