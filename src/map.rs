@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point, WorldRect as Rect};
 
 pub const TILE_WIDTH: u32 = 64;
@@ -258,6 +260,13 @@ impl TilePoint {
       y: Coord((self.y * TILE_WIDTH) as f32),
     }
   }
+
+  pub fn center_to_world_point(self) -> Point {
+    Point {
+      x: Coord((self.x as f32 + 0.5) * TILE_WIDTH_F32),
+      y: Coord((self.y as f32 + 0.5) * TILE_WIDTH_F32),
+    }
+  }
 }
 
 pub trait ToTilePoint {
@@ -271,6 +280,16 @@ impl ToTilePoint for Point {
     TilePoint {
       x: self.x.0 as u32 / TILE_WIDTH,
       y: self.y.0 as u32 / TILE_WIDTH,
+    }
+  }
+}
+
+impl Add for TilePoint {
+  type Output = Self;
+  fn add(self, other: Self) -> Self {
+    TilePoint {
+      x: self.x + other.x,
+      y: self.y + other.y,
     }
   }
 }

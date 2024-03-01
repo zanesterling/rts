@@ -10,7 +10,7 @@ use crate::sprite_sheet::SpriteKey;
 
 const TICKS_PER_SEC: u32 = 24;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct GameDur {
   pub ticks: u32,
 }
@@ -98,6 +98,24 @@ impl State {
           unit.waypoints.pop_front();
         }
       }
+    }
+
+    let mut units_to_make = vec![];
+    for building in self.buildings.iter_mut() {
+      let mut done_training = false;
+      if let Some(training) = building.train_queue.front_mut() {
+        training.dur_left.ticks -= 1;
+        done_training = training.dur_left.ticks == 0;
+        if done_training {
+          units_to_make.push((training.unit_type.clone(), building.spawn_location()));
+        }
+      }
+      if done_training {
+        building.train_queue.pop_front();
+      }
+    }
+    for (unit, pos) in units_to_make {
+      self.make_unit(unit, pos);
     }
   }
 
@@ -282,6 +300,13 @@ pub struct Building {
   pub train_queue_max_len: usize,
 
   pub abilities: Vec<Rc<dyn Ability>>,
+}
+
+impl Building {
+  fn spawn_location(&self) -> Point {
+    let tile_pos = self.top_left_pos + TilePoint::new(0, self.height);
+    tile_pos.center_to_world_point()
+  }
 }
 
 // Sort of a factory for units. Stores some properties of the unit so that one
