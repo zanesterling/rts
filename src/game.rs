@@ -237,6 +237,16 @@ impl Unit {
   }
 }
 
+pub struct Building {
+  pub uid: UID,
+
+  pub top_left_pos: TilePoint,
+  pub width: u32,
+  pub height: u32,
+
+  pub selected: bool,
+}
+
 // Sort of a factory for units. Stores some properties of the unit so that one
 // can make more of a type without closures.
 #[derive(Clone)]
@@ -274,14 +284,4 @@ impl Ability for AbilityBuild {
   fn cast(&self, state: &mut State, target: Point) {
     state.make_unit(state.unit_types[0].clone(), target);
   }
-}
-
-pub struct Building {
-  pub uid: UID,
-
-  pub top_left_pos: TilePoint,
-  pub width: u32,
-  pub height: u32,
-
-  pub selected: bool,
 }
