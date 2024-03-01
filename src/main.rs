@@ -391,19 +391,14 @@ fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
           // If the key corresponds to a usable ability on a selected
           // unit, go into the AbilitySelected state, so that it will
           // cast on the next click.
-          let mut ability = None;
-          for unit in state.game.units.iter() {
-            if !unit.selected {
-              continue;
-            }
-            for x in unit.abilities.iter() {
-              if x.keycode() == keycode {
-                ability = Some((*x).clone());
-              }
-            }
-          }
+          let ability = state
+            .game
+            .units
+            .iter()
+            .filter(|u| u.selected)
+            .find_map(|u| u.abilities.iter().find(|ab| ab.keycode() == keycode));
           if let Some(ability) = ability {
-            state.cursor_state = CursorState::AbilitySelected(ability);
+            state.cursor_state = CursorState::AbilitySelected(ability.clone());
           }
         }
 
