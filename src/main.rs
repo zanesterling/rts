@@ -66,6 +66,8 @@ macro_rules! perf {
     if PERF_DEBUG { println!( $($x),* ); }
   };
 }
+const MEAN_FRAME_DEBUG: bool = false;
+const LONG_FRAME_DEBUG: bool = false;
 
 const BUILDING_SELECTION_OFFSET: u32 = 3;
 const TRAIN_QUEUE_WIDTH: u32 = 8;
@@ -248,29 +250,48 @@ fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
     for event in event_pump.poll_iter() {
       handle_event(&mut state, &mut canvas, event);
     }
+    let events_done = Instant::now();
 
     // Update world.
     // TODO: Make game ticks operate on a different clock than render ticks.
     state.game.tick();
+    let tick_done = Instant::now();
 
     // Render.
     render(&mut canvas, &state);
+    let render_done = Instant::now();
     // TODO: If the user is dragging the screen around, this call might block.
     // Consider using a non-blocking variant.
     canvas.present();
+    let present_done = Instant::now();
 
     let frame_dur = frame_start.elapsed();
     mean_frame_dur = mean_frame_dur * 9 / 10 + frame_dur * 1 / 10;
-    perf!("mean_frame_dur: {:?}", mean_frame_dur);
+    if MEAN_FRAME_DEBUG {
+      perf!("mean_frame_dur: {:?}", mean_frame_dur);
+    }
     if frame_dur < TARGET_FRAME_DUR {
       sleep(TARGET_FRAME_DUR - frame_dur);
-    } else {
+    } else if LONG_FRAME_DEBUG {
       perf!(
         "err: long frame took {:?} > {:?}",
         frame_dur,
         TARGET_FRAME_DUR
       );
     }
+    perf!(
+      "frame:   {:?}\n\
+       -------------\n\
+       events:  {:?}\n\
+       tick:    {:?}\n\
+       render:  {:?}\n\
+       present: {:?}\n",
+      frame_dur,
+      events_done - frame_start,
+      tick_done - events_done,
+      render_done - events_done,
+      present_done - render_done
+    );
   }
 }
 
