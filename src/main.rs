@@ -12,7 +12,6 @@ mod sprite_sheet;
 extern crate rand;
 extern crate sdl2;
 
-use rand::Rng;
 use sdl2::event::{Event, WindowEvent};
 use sdl2::image;
 use sdl2::keyboard::Keycode;
@@ -248,7 +247,7 @@ fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
   }
 }
 
-fn handle_event(state: &mut State, canvas: &mut Canvas<Window>, event: Event) {
+fn handle_event(state: &mut State, _canvas: &mut Canvas<Window>, event: Event) {
   match event {
     // Quit.
     Event::Quit { .. }
