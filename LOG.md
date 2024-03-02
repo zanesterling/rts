@@ -1,6 +1,11 @@
 # Development log
 
-## 2024-02-30
+## 2024-03-02
+Today I'll add the ability to construct buildings. Step 1 will be making it
+possible to build them, and step 2 will be showing build ghosts while you move
+your mouse.
+
+## 2024-03-01
 I have a day off today! I'm going to try to work on some big chunk.
 
 Yesterday I added buildings that are selectable. I started to give them
