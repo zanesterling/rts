@@ -6,7 +6,7 @@ use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point, WorldRect as R
 use crate::map::{GridTile, Map, TilePoint, ToTilePoint};
 use crate::sprite_sheet::SpriteKey;
 
-const TICKS_PER_SEC: u32 = 24;
+const TICKS_PER_SEC: u32 = 120; // TODO: Drop to 24 when fps and tps differ.
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct GameDur {
