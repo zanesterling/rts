@@ -234,7 +234,6 @@ fn main() {
 
 fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
   let mut event_pump = sdl_context.event_pump().unwrap();
-  let mut next_tick_time = Instant::now() - game::TARGET_TICK_INTERVAL;
   while state.running {
     let frame_start = Instant::now();
 
@@ -245,10 +244,7 @@ fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
 
     // Update world.
     // TODO: Make game ticks operate on a different clock than render ticks.
-    while next_tick_time < frame_start {
-      state.game.tick();
-      next_tick_time += game::TARGET_TICK_INTERVAL;
-    }
+    state.game.tick();
 
     // Render.
     render(&mut canvas, &state);

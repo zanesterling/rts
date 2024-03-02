@@ -1,15 +1,12 @@
 use std::collections::HashMap;
 use std::collections::VecDeque;
-use std::time::Duration;
 
 use crate::ability::{Ability, AbilityBuild, AbilityTrain};
 use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point, WorldRect as Rect};
 use crate::map::{GridTile, Map, TilePoint, ToTilePoint};
 use crate::sprite_sheet::SpriteKey;
 
-pub const TICKS_PER_SEC: u32 = 24;
-pub const TARGET_TICK_INTERVAL: Duration =
-  Duration::from_nanos(1_000_000_000 / TICKS_PER_SEC as u64);
+const TICKS_PER_SEC: u32 = 24;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct GameDur {
