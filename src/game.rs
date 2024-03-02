@@ -27,6 +27,7 @@ pub struct State {
   pub units: Vec<Unit>,
   pub unit_types: Vec<UnitType>,
   pub buildings: Vec<Building>,
+  pub building_types: Vec<BuildingType>,
   pub map: Map,
   pub next_uid: UID,
 }
@@ -39,6 +40,7 @@ impl State {
       units: vec![],
       unit_types: vec![],
       buildings: vec![],
+      building_types: vec![],
 
       map: Map {
         width: 14,
@@ -66,7 +68,14 @@ impl State {
     };
     state.unit_types.push(newt_type.clone());
     state.make_unit(newt_type, Point::new(Coord(300.), Coord(250.)));
-    state.make_building(TilePoint::new(1, 1));
+
+    let town_hall_type = BuildingType {
+      name: "Town Hall",
+      width: 1,
+      height: 1,
+    };
+    state.building_types.push(town_hall_type.clone());
+    state.make_building(town_hall_type, TilePoint::new(1, 1));
     state
   }
 
@@ -143,14 +152,13 @@ impl State {
     self.units.iter_mut().find(|u| u.uid == uid)
   }
 
-  fn make_building(&mut self, top_left_pos: TilePoint) {
+  pub fn make_building(&mut self, building_type: BuildingType, top_left_pos: TilePoint) {
     let uid = self.next_uid();
     self.buildings.push(Building {
       uid,
 
       top_left_pos,
-      width: 1,
-      height: 1,
+      building_type,
 
       selected: false,
 
@@ -289,8 +297,7 @@ pub struct Building {
   pub uid: UID,
 
   pub top_left_pos: TilePoint,
-  pub width: u32,
-  pub height: u32,
+  pub building_type: BuildingType,
 
   pub selected: bool,
 
@@ -301,20 +308,43 @@ pub struct Building {
 }
 
 impl Building {
+  // Width in tiles.
+  pub fn width(&self) -> u32 {
+    self.building_type.width
+  }
+  // Height in tiles.
+  pub fn height(&self) -> u32 {
+    self.building_type.height
+  }
+
   fn spawn_location(&self) -> Point {
-    let tile_pos = self.top_left_pos + TilePoint::new(0, self.height);
+    let tile_pos = self.top_left_pos + TilePoint::new(0, self.height());
     tile_pos.center_to_world_point()
   }
 }
 
 // Sort of a factory for units. Stores some properties of the unit so that one
 // can make more of a type without closures.
+//
+// TODO: For both UnitTypes and BuildingTypes, add a list of the abilities they
+// get. To do this, add a registry of Abilities and make them generically
+// constructable.
 #[derive(Clone)]
 pub struct UnitType {
   pub name: &'static str,
   pub sprite_key: SpriteKey,
   pub radius: Coord,
   pub base_speed: Coord,
+}
+
+#[derive(Clone)]
+pub struct BuildingType {
+  pub name: &'static str,
+  // TODO: Add sprite key
+
+  // Width and height measured in tiles.
+  pub width: u32,
+  pub height: u32,
 }
 
 pub struct UnitTraining {

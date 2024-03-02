@@ -178,8 +178,8 @@ impl BoxSelect {
       let bounds = Rect::new(
         top_left.x,
         top_left.y,
-        building.width * TILE_WIDTH,
-        building.height * TILE_WIDTH,
+        building.width() * TILE_WIDTH,
+        building.height() * TILE_WIDTH,
       );
       building.selected = selection_rect.has_intersection(bounds);
     }
@@ -507,8 +507,8 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
     let bounds = Rect::new(
       top_left.x,
       top_left.y,
-      building.width * TILE_WIDTH,
-      building.height * TILE_WIDTH,
+      building.width() * TILE_WIDTH,
+      building.height() * TILE_WIDTH,
     );
     let _ = canvas.fill_rect(bounds);
 
