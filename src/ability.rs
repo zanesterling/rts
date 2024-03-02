@@ -1,4 +1,4 @@
-use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point};
+use crate::dimensions::WorldPoint as Point;
 use crate::game::{BuildingType, GameDur, State, UnitTraining, UnitType, UID};
 use crate::map::{TilePoint, ToTilePoint};
 
@@ -81,8 +81,11 @@ impl AbilityCommon for AbilityBuild {
 
 impl PointTargetedAbility for AbilityBuild {
   fn cast(&self, state: &mut State, target: Point) {
-    let building_dims = TilePoint::new(self.building_type.width, self.building_type.height);
-    let top_left = target - building_dims.to_world_point() * Coord(0.5);
+    // Do the division in integer space to right behavior for even- and
+    // odd-sided buildings.
+    let building_half_dim =
+      TilePoint::new(self.building_type.width / 2, self.building_type.height / 2);
+    let top_left = target - building_half_dim.to_world_point();
     state.make_building(self.building_type.clone(), top_left.to_tile_point());
   }
 }
