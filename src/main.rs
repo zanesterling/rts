@@ -215,7 +215,7 @@ fn main() {
     .build()
     .unwrap();
 
-  let mut canvas = window.into_canvas().present_vsync().build().unwrap();
+  let canvas = window.into_canvas().present_vsync().build().unwrap();
   let canvas_txc = canvas.texture_creator();
 
   let sprite_sheet = SpriteSheet::from_file(SPRITE_SHEET_PATH, &canvas_txc).unwrap_or_else(|e| {
@@ -235,8 +235,6 @@ fn main() {
     };
     State::new(sprite_sheet, display_bounds, font)
   };
-  render(&mut canvas, &state);
-  canvas.present();
   main_loop(state, canvas, sdl_context);
 }
 
