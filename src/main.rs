@@ -26,7 +26,7 @@ use sdl2::Sdl;
 use std::process::exit;
 use std::rc::Rc;
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::ability::{Ability, AbilityCommon, PointTargetedAbility};
 use crate::dimensions::{DisplayPoint, ToWorld, WindowPoint, WorldCoord, WorldPoint};
@@ -56,6 +56,10 @@ const DISPLAY_BR_X: i32 = 3202 + WINDOW_WIDTH as i32;
 const DISPLAY_BR_Y: i32 = 1256 + WINDOW_HEIGHT as i32;
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
+
+const TARGET_FRAME_PER_SEC: u32 = 120;
+const TARGET_FRAME_DUR: Duration = Duration::new(0, 1_000_000_000u32 / TARGET_FRAME_PER_SEC);
+const PERF_DEBUG: bool = false; // Enable this to get some perf debug info.
 
 const BUILDING_SELECTION_OFFSET: u32 = 3;
 const TRAIN_QUEUE_WIDTH: u32 = 8;
@@ -231,6 +235,13 @@ fn main() {
 fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
   let mut event_pump = sdl_context.event_pump().unwrap();
   while state.running {
+    let frame_start = Instant::now();
+
+    // Handle input.
+    for event in event_pump.poll_iter() {
+      handle_event(&mut state, &mut canvas, event);
+    }
+
     // Update world.
     // TODO: Make game ticks operate on a different clock than render ticks.
     state.game.tick();
@@ -238,11 +249,17 @@ fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
     // Render.
     render(&mut canvas, &state);
     canvas.present();
-    sleep(Duration::new(0, 1_000_000_000u32 / 120));
 
-    // Handle input.
-    for event in event_pump.poll_iter() {
-      handle_event(&mut state, &mut canvas, event);
+    let frame_dur = frame_start.elapsed();
+    if frame_dur < TARGET_FRAME_DUR {
+      sleep(TARGET_FRAME_DUR - frame_dur);
+    } else {
+      if PERF_DEBUG {
+        println!(
+          "err: long frame took {:?} > {:?}",
+          frame_dur, TARGET_FRAME_DUR
+        );
+      }
     }
   }
 }
