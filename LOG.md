@@ -12,6 +12,94 @@ I found a cool weird bug! While the window is being dragged, calls to
 in one loop, this causes the whole game to freeze. I could maybe fix it by
 doing the presentation code in another thread.
 
+---
+
+After doing some basic performance logging I discovered that I'm basically
+always missing the deadline for processing at 120fps. I spent some time
+figuring out how to profile my job, which I'll document below. First though,
+the findings are:
+
+1. Like I expected, creating & destroying a new texture every time I render
+   text is EXPENSIVE. It accounts for 93% of the time spent in `render()`!
+   I should look into caching those text renders.
+2. `canvas.present()` is the other biggest offender, usually taking ~8ms of the
+   8.3ms you get at 120hz. Not sure how to improve that, will think more later.
+
+So. To get these insights I had to work out how to profile my game. My steps
+went like this:
+
+1. `cargo flamegraph`
+2. `perf`
+3. `hotspot`
+4. `rustfilt`
+5. newer `hotspot`
+
+I first tried installing and using `cargo flamegraph`. It gave me error
+messages, so I tried tweaking and tuning for a while. One fix that probably
+helped me later was switching from WSL 1 to WSL 2. I had thought I was on WSL 2
+already but figured I'd give it a shot. I opened `cmd.exe` and ran `wsl
+--set-version Ubuntu 2`. That chugged for several minutes, after which `mintty`
+stopped working. I ran `wsl` from `cmd` and from there opened up
+`gnome-terminal`, and it was clear from the gnome-style window wrapping that
+I'd really changed something. This had the side benefit of enabling ctrl-c
+ctrl-v again, which didn't work in `mintty`.
+
+Under WSL 2 I built the MS version of `perf`. IIRC that bumped me to a new
+error message where perf ran correctly, but `cargo flamegraph` spat out
+`failed to sample program`. I tried running `flamegraph` on its own, and that
+gave the same result. I messed around with sudo, which didn't help, and I told
+the kernel to let me do perf stuff without sudo by running
+`echo -1 | sudo tee /proc/sys/kernel/perf_event_paranoid`. That also didn't
+seem to help. In retrospect it probably didn't achieve anything, since perf was
+already producing data (that I just couldn't read with `flamegraph`).
+
+Each time I ran `flamegraph`, `perf` was running and producing a `perf.data`
+file. I next tried installing `hotspot`, which is a tool for viewing `perf`
+outputs, and ran it on that file. It showed a ton of parser errors, and its
+"Top hotspots" were all labeled `??`. But after clicking around for a while I
+realized that some of the random-looking strings had substrings with my
+function names. We were in the game!
+
+Those were apparently [mangled
+symbols](https://nnethercote.github.io/perf-book/profiling.html#symbol-demangling).
+The documentation around these is really weak. The link above says you can
+manually demangle symbols with `rustfilt`. I tried running this on the
+`perf.data` files and on my binary, but I think it only works on strings, and
+won't try to replace them in any kind of binary file. After googling around I found
+[an old Reddit post from 3yrs
+ago](https://www.reddit.com/r/rust/comments/k066vw/the_hotspot_profiler_gui_has_support_for_rust/)
+which says that `hotspot` supports symbol demangling. But mine doesn't, so what
+gives? Turns out the version on `apt` is from 2017. Ugh. Easy enough to fix,
+though. The project is on GitHub, and [their releases
+page](https://github.com/KDAB/hotspot/releases) has a much more recent version
+from 2022 that you can get as an AppImage. I downloaded this, `chmod +x`ed it,
+ran it on my `perf.data`, and voila! My symbols were demangled, and `hotspot`
+worked great.
+
+So trimming off the dead ends in that story, my recommended setup steps would
+be as follows. I haven't gone back and confirmed these from a fresh install
+though, so do confirm yourself.
+
+1. Add `debug=true` to the `[profile.release]` section in your `Cargo.toml`.
+   This was the first question everyone on the internet asked whenever anyone
+   had issues with profiling. It tells `cargo` to ask `rustc` to include
+   debugging symbols in the release build. Maybe don't ship these to your
+   customers though, since they bloat the binary.
+2. Install `perf`. You can get this and other tools by running `sudo apt
+   install linux-tools-common linux-tools-generic`.
+   1. If this gives you trouble, consider building from source. You can find
+      the `perf` source code in the `tools/perf/` directory of the kernel's
+      repo.
+3. Record a session with your binary: `perf record -F99 --call-graph dwarf
+   path/to/your/binary`. More details on the flags in [the `rustc` dev
+   guide](https://rustc-dev-guide.rust-lang.org/profiling/with_perf.html#the-basics).
+4. Install a recent version of `hotspot`. I used
+   [v1.4.1](https://github.com/KDAB/hotspot/releases/tag/v1.4.1), which is the
+   most recent version as of today.
+5. Point it at your `perf.data`, and you should be good to go!
+
+A rewarding day's work. Next time I'll come back and optimize the text rendering.
+
 ## 2024-03-01
 I have a day off today! I'm going to try to work on some big chunk.
 
