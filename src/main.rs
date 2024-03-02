@@ -18,11 +18,12 @@ use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use sdl2::render::Canvas;
+use sdl2::render::{Canvas, Texture, TextureCreator};
 use sdl2::ttf::Font;
-use sdl2::video::Window;
+use sdl2::video::{Window, WindowContext};
 use sdl2::Sdl;
 
+use std::collections::HashMap;
 use std::process::exit;
 use std::rc::Rc;
 use std::thread::sleep;
@@ -72,11 +73,12 @@ const LONG_FRAME_DEBUG: bool = false;
 const BUILDING_SELECTION_OFFSET: u32 = 3;
 const TRAIN_QUEUE_WIDTH: u32 = 8;
 
-struct State<'a, 'b> {
+struct State<'canvas, 'b> {
   // "Immutable" stuff.
-  sprite_sheet: SpriteSheet<'a>,
+  sprite_sheet: SpriteSheet<'canvas>,
   font: Font<'b, 'static>,
   display_bounds: DisplayBounds,
+  text_renderer: CachingTextRenderer<'canvas>,
 
   // State of the game.
   running: bool,
@@ -90,16 +92,18 @@ struct State<'a, 'b> {
   mouse_pos: WindowPoint,
 }
 
-impl<'a, 'b> State<'a, 'b> {
+impl<'canvas, 'b> State<'canvas, 'b> {
   pub fn new<'s, 'f>(
     sprite_sheet: SpriteSheet<'s>,
     display_bounds: DisplayBounds,
     font: Font<'f, 'static>,
+    text_renderer: CachingTextRenderer<'s>,
   ) -> State<'s, 'f> {
     State {
       sprite_sheet,
       font,
       display_bounds,
+      text_renderer,
 
       running: true,
       game: game::State::level1(),
@@ -226,6 +230,8 @@ fn main() {
     exit(1);
   });
 
+  let text_renderer = CachingTextRenderer::new(&canvas_txc);
+
   let state = {
     let display_bounds = DisplayBounds {
       top_left_x: DISPLAY_TL_X,
@@ -233,7 +239,7 @@ fn main() {
       width: (DISPLAY_BR_X - DISPLAY_TL_X) as u32,
       height: (DISPLAY_BR_Y - DISPLAY_TL_Y) as u32,
     };
-    State::new(sprite_sheet, display_bounds, font)
+    State::new(sprite_sheet, display_bounds, font, text_renderer)
   };
   main_loop(state, canvas, sdl_context);
 }
@@ -256,7 +262,10 @@ fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
     let tick_done = Instant::now();
 
     // Render.
-    render(&mut canvas, &state);
+    render(
+      &mut canvas,
+      &mut state, // this ref is mut to allow mutation of the text_renderer
+    );
     let render_done = Instant::now();
     // TODO: If the user is dragging the screen around, this call might block.
     // Consider using a non-blocking variant.
@@ -496,7 +505,7 @@ fn handle_event(state: &mut State, _canvas: &mut Canvas<Window>, event: Event) {
   }
 }
 
-fn render(canvas: &mut Canvas<Window>, state: &State) {
+fn render(canvas: &mut Canvas<Window>, state: &mut State) {
   canvas.set_draw_color(Color::BLACK);
   canvas.clear();
 
@@ -601,50 +610,34 @@ fn render(canvas: &mut Canvas<Window>, state: &State) {
       // TODO: Handle multiple abilities. Same for buildings.
       let text = format!("[{}] {}", ability.keycode(), ability.name());
       let top_left = WindowPoint::new(0, 0);
-      draw_text(canvas, top_left, &state.font, &text).expect("couldn't draw units' abilities");
+      state
+        .text_renderer
+        .draw_to_canvas(canvas, &state.font, &text, top_left)
+        .expect("couldn't draw units' abilities");
     }
   } else if let Some(building) = building {
     for ability in building.abilities.iter() {
       let text = format!("[{}] {}", ability.keycode(), ability.name());
       let top_left = WindowPoint::new(0, 0);
-      draw_text(canvas, top_left, &state.font, &text).expect("couldn't draw units' abilities");
+      state
+        .text_renderer
+        .draw_to_canvas(canvas, &state.font, &text, top_left)
+        .expect("couldn't draw units' abilities");
     }
   }
 
   if let CursorState::AbilitySelected(ability) = &state.cursor_state {
     let top_left = WindowPoint::new(0, WINDOW_HEIGHT as i32 - state.font.height());
-    draw_text(canvas, top_left, &state.font, ability.name()).expect("couldn't draw active ability");
+    state
+      .text_renderer
+      .draw_to_canvas(canvas, &state.font, ability.name(), top_left)
+      .expect("couldn't draw active ability");
   }
 }
 
 fn draw_waypoint(canvas: &mut Canvas<Window>, p: WindowPoint) {
   canvas.set_draw_color(WAYPOINT_COLOR);
   let _ = canvas.draw_rect(rect_from_center_rad(p, WAYPOINT_RAD));
-}
-
-// TODO: Clean up this code.
-// This is intensely janky and low-res, and it's creating a new surface
-// every single frame for each ability that a selected unit has.
-fn draw_text(
-  canvas: &mut Canvas<Window>,
-  p: WindowPoint,
-  font: &Font,
-  text: &str,
-) -> Result<(), String> {
-  let surface = font
-    .render(text)
-    .solid(COLOR_WHITE)
-    .map_err(|e| format!("couldn't render text: {}", e))?;
-  let texture_creator = canvas.texture_creator();
-  let texture = texture_creator
-    .create_texture_from_surface(&surface)
-    .map_err(|e| format!("couldn't create texture: {}", e))?;
-
-  let bounds = texture.query();
-  let target_rect = Rect::new(p.x, p.y, bounds.width, bounds.height);
-  canvas
-    .copy(&texture, None, target_rect)
-    .map_err(|e| format!("couldn't copy texture to canvas: {}", e))
 }
 
 fn rect_from_points(p1: WindowPoint, p2: WindowPoint) -> Rect {
@@ -657,4 +650,57 @@ fn rect_from_points(p1: WindowPoint, p2: WindowPoint) -> Rect {
 
 fn rect_from_center_rad(p: WindowPoint, rad: u32) -> Rect {
   Rect::from_center(p, rad * 2, rad * 2)
+}
+
+// A text renderer which caches all the created textures.
+//
+// This is significantly faster than re-rendering if you often render the same
+// text, because you don't have to request and close a new texture each time --
+// an expensive operation!
+struct CachingTextRenderer<'canvas> {
+  texture_creator: &'canvas TextureCreator<WindowContext>,
+  texture_map: HashMap<String, Texture<'canvas>>,
+}
+
+impl<'canvas> CachingTextRenderer<'canvas> {
+  fn new(texture_creator: &'canvas TextureCreator<WindowContext>) -> CachingTextRenderer<'canvas> {
+    CachingTextRenderer {
+      texture_creator,
+      texture_map: HashMap::new(),
+    }
+  }
+
+  fn render_text(&mut self, font: &Font, text: &str) -> Result<&Texture<'canvas>, String> {
+    if self.texture_map.contains_key(text) {
+      return Ok(self.texture_map.get(text).unwrap());
+    }
+
+    let surface = font
+      .render(text)
+      .solid(COLOR_WHITE)
+      .map_err(|e| format!("couldn't render text: {}", e))?;
+    let texture = self
+      .texture_creator
+      .create_texture_from_surface(&surface)
+      .map_err(|e| format!("couldn't create texture: {}", e))?;
+    self.texture_map.insert(text.to_string(), texture);
+    Ok(self.texture_map.get(text).unwrap())
+  }
+
+  // TODO: Improve resolution of drawn text.
+  fn draw_to_canvas(
+    &mut self,
+    canvas: &mut Canvas<Window>,
+    font: &Font,
+    text: &str,
+    p: WindowPoint,
+  ) -> Result<(), String> {
+    let texture = self.render_text(font, text)?;
+
+    let bounds = texture.query();
+    let target_rect = Rect::new(p.x, p.y, bounds.width, bounds.height);
+    canvas
+      .copy(&texture, None, target_rect)
+      .map_err(|e| format!("couldn't copy texture to canvas: {}", e))
+  }
 }

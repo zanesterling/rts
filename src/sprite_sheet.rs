@@ -10,12 +10,12 @@ use sdl2::video::WindowContext;
 use std::path::Path;
 use std::str::FromStr;
 
-pub struct SpriteSheet<'a> {
-  pub texture: Texture<'a>,
+pub struct SpriteSheet<'texture> {
+  pub texture: Texture<'texture>,
   pub sprite_map: Vec<SpriteRef>,
 }
 
-impl<'a> SpriteSheet<'a> {
+impl<'texture> SpriteSheet<'texture> {
   pub fn from_file<'txc>(
     sprite_map_path: &str,
     texture_creator: &'txc TextureCreator<WindowContext>,
@@ -129,4 +129,3 @@ impl FromStr for SpriteRef {
     })
   }
 }
-
