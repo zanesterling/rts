@@ -59,7 +59,13 @@ const WINDOW_HEIGHT: u32 = 600;
 
 const TARGET_FRAME_PER_SEC: u32 = 120;
 const TARGET_FRAME_DUR: Duration = Duration::new(0, 1_000_000_000u32 / TARGET_FRAME_PER_SEC);
+
 const PERF_DEBUG: bool = false; // Enable this to get some perf debug info.
+macro_rules! perf {
+  ($( $x:expr ),* ) => {
+    if PERF_DEBUG { println!( $($x),* ); }
+  };
+}
 
 const BUILDING_SELECTION_OFFSET: u32 = 3;
 const TRAIN_QUEUE_WIDTH: u32 = 8;
@@ -234,6 +240,7 @@ fn main() {
 
 fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
   let mut event_pump = sdl_context.event_pump().unwrap();
+  let mut mean_frame_dur = Duration::from_nanos(0);
   while state.running {
     let frame_start = Instant::now();
 
@@ -248,18 +255,21 @@ fn main_loop(mut state: State, mut canvas: Canvas<Window>, sdl_context: Sdl) {
 
     // Render.
     render(&mut canvas, &state);
+    // TODO: If the user is dragging the screen around, this call might block.
+    // Consider using a non-blocking variant.
     canvas.present();
 
     let frame_dur = frame_start.elapsed();
+    mean_frame_dur = mean_frame_dur * 9 / 10 + frame_dur * 1 / 10;
+    perf!("mean_frame_dur: {:?}", mean_frame_dur);
     if frame_dur < TARGET_FRAME_DUR {
       sleep(TARGET_FRAME_DUR - frame_dur);
     } else {
-      if PERF_DEBUG {
-        println!(
-          "err: long frame took {:?} > {:?}",
-          frame_dur, TARGET_FRAME_DUR
-        );
-      }
+      perf!(
+        "err: long frame took {:?} > {:?}",
+        frame_dur,
+        TARGET_FRAME_DUR
+      );
     }
   }
 }
