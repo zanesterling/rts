@@ -5,6 +5,13 @@ Today I'll add the ability to construct buildings. Step 1 will be making it
 possible to build them, and step 2 will be showing build ghosts while you move
 your mouse.
 
+---
+
+I found a cool weird bug! While the window is being dragged, calls to
+`canvas.present()` will block. Since I have my render, event, and game code all
+in one loop, this causes the whole game to freeze. I could maybe fix it by
+doing the presentation code in another thread.
+
 ## 2024-03-01
 I have a day off today! I'm going to try to work on some big chunk.
 
