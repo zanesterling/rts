@@ -67,14 +67,14 @@ impl State {
       base_speed: Coord(1.),
     };
     state.unit_types.push(newt_type.clone());
-    state.make_unit(newt_type, Point::new(Coord(300.), Coord(250.)));
-
     let town_hall_type = BuildingType {
       name: "Town Hall",
       width: 1,
       height: 1,
     };
     state.building_types.push(town_hall_type.clone());
+
+    state.make_unit(newt_type, Point::new(Coord(300.), Coord(250.)));
     state.make_building(town_hall_type, TilePoint::new(1, 1));
     state
   }
@@ -144,7 +144,7 @@ impl State {
       selected: false,
       waypoints: VecDeque::new(),
       // TODO: Make settable by unit type
-      abilities: vec![AbilityBuild::new(uid)],
+      abilities: vec![AbilityBuild::new(uid, self.building_types[0].clone())],
     });
   }
 

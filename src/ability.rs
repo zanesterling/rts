@@ -1,5 +1,6 @@
-use crate::dimensions::WorldPoint as Point;
-use crate::game::{GameDur, State, UnitTraining, UnitType, UID};
+use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point};
+use crate::game::{BuildingType, GameDur, State, UnitTraining, UnitType, UID};
+use crate::map::{TilePoint, ToTilePoint};
 
 use sdl2::keyboard::Keycode;
 
@@ -51,13 +52,18 @@ pub trait PointTargetedAbility: AbilityCommon {
   fn cast(&self, state: &mut State, target: Point);
 }
 
+// An ability for worker units: build a building at the target location.
 pub struct AbilityBuild {
   caster: UID,
+  building_type: BuildingType,
 }
 
 impl AbilityBuild {
-  pub fn new(caster: UID) -> Ability {
-    Ability::PointTargeted(Rc::new(AbilityBuild { caster }))
+  pub fn new(caster: UID, building_type: BuildingType) -> Ability {
+    Ability::PointTargeted(Rc::new(AbilityBuild {
+      caster,
+      building_type,
+    }))
   }
 }
 
@@ -75,10 +81,13 @@ impl AbilityCommon for AbilityBuild {
 
 impl PointTargetedAbility for AbilityBuild {
   fn cast(&self, state: &mut State, target: Point) {
-    state.make_unit(state.unit_types[0].clone(), target);
+    let building_dims = TilePoint::new(self.building_type.width, self.building_type.height);
+    let top_left = target - building_dims.to_world_point() * Coord(0.5);
+    state.make_building(self.building_type.clone(), top_left.to_tile_point());
   }
 }
 
+// An ability for production structures: add a unit to the train queue.
 pub struct AbilityTrain {
   caster: UID,
   unit_type: UnitType,
