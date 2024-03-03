@@ -1,5 +1,13 @@
 # Development log
 
+## 2024-03-03
+Last night I optimized the text rendering, and now the game is running a bit
+smoother. I also switched from hardware (OpenGL) to software renderer, which is
+faster for now. I'm guessing because there's less work that needs to be done
+synchronizing hardware.
+
+Today I'll add those build ghosts.
+
 ## 2024-03-02
 Today I'll add the ability to construct buildings. Step 1 will be making it
 possible to build them, and step 2 will be showing build ghosts while you move
