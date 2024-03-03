@@ -1,8 +1,12 @@
 use crate::dimensions::WorldPoint as Point;
 use crate::game::{BuildingType, GameDur, State, UnitTraining, UnitType, UID};
-use crate::map::{TilePoint, ToTilePoint};
+use crate::map::{TilePoint, ToTilePoint, TILE_WIDTH};
 
 use sdl2::keyboard::Keycode;
+use sdl2::pixels::Color;
+use sdl2::rect::Rect as SdlRect;
+use sdl2::render::{BlendMode, Canvas};
+use sdl2::video::Window;
 
 use std::rc::Rc;
 
@@ -50,6 +54,9 @@ pub trait NonTargetedAbility: AbilityCommon {
 
 pub trait PointTargetedAbility: AbilityCommon {
   fn cast(&self, state: &mut State, target: Point);
+
+  // Draw anything you want to while the ability is selected.
+  fn draw(&self, canvas: &mut Canvas<Window>, mouse: Point, camera: Point);
 }
 
 // An ability for worker units: build a building at the target location.
@@ -65,6 +72,14 @@ impl AbilityBuild {
       building_type,
     }))
   }
+
+  fn where_to_build(&self, mouse: Point) -> TilePoint {
+    // Do the division in integer space to right behavior for even- and
+    // odd-sided buildings.
+    let building_half_dim =
+      TilePoint::new(self.building_type.width / 2, self.building_type.height / 2);
+    (mouse - building_half_dim.to_world_point()).to_tile_point()
+  }
 }
 
 impl AbilityCommon for AbilityBuild {
@@ -79,14 +94,20 @@ impl AbilityCommon for AbilityBuild {
   }
 }
 
+const BUILD_GHOST_COLOR: Color = Color::RGBA(139, 233, 253, 128);
 impl PointTargetedAbility for AbilityBuild {
   fn cast(&self, state: &mut State, target: Point) {
-    // Do the division in integer space to right behavior for even- and
-    // odd-sided buildings.
-    let building_half_dim =
-      TilePoint::new(self.building_type.width / 2, self.building_type.height / 2);
-    let top_left = target - building_half_dim.to_world_point();
-    state.make_building(self.building_type.clone(), top_left.to_tile_point());
+    state.make_building(self.building_type.clone(), self.where_to_build(target));
+  }
+
+  fn draw(&self, canvas: &mut Canvas<Window>, mouse: Point, camera: Point) {
+    let build_pos = self.where_to_build(mouse);
+    canvas.set_draw_color(BUILD_GHOST_COLOR);
+    canvas.set_blend_mode(BlendMode::Blend);
+    let top_left = build_pos.to_world_point().to_window(camera);
+    let width = self.building_type.width * TILE_WIDTH;
+    let height = self.building_type.height * TILE_WIDTH;
+    let _ = canvas.fill_rect(SdlRect::new(top_left.x, top_left.y, width, height));
   }
 }
 

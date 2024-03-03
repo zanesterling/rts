@@ -632,6 +632,9 @@ fn render(canvas: &mut Canvas<Window>, state: &mut State) {
       .text_renderer
       .draw_to_canvas(canvas, &state.font, ability.name(), top_left)
       .expect("couldn't draw active ability");
+
+    let camera_pos = state.camera_pos();
+    ability.draw(canvas, state.mouse_pos.to_world(camera_pos), camera_pos);
   }
 }
 
