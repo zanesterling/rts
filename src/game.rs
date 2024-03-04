@@ -34,25 +34,13 @@ pub struct State {
 
 impl State {
   pub fn blank() -> State {
-    let o = GridTile::Empty;
-    let l = GridTile::Obstacle;
     State {
       units: vec![],
       unit_types: vec![],
       buildings: vec![],
       building_types: vec![],
 
-      map: Map {
-        width: 14,
-        height: 10,
-        grid_tiles: vec![
-          o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o,
-          o, o, o, l, l, l, l, l, l, o, o, o, o, o, o, o, o, o, o, o, o, o, l, o, o, o, o, o, o, o,
-          o, o, o, o, l, o, l, o, o, o, o, o, o, o, o, l, l, l, l, o, l, o, o, o, o, o, o, o, o, l,
-          o, o, o, o, l, o, o, o, o, o, o, o, o, l, l, l, l, l, l, o, o, o, o, o, o, o, o, o, o, o,
-          o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o, o,
-        ],
-      },
+      map: Map::from_file("media/test-map.txt").expect("couldn't load the map"),
 
       next_uid: 0,
     }

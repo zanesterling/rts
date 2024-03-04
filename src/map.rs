@@ -25,6 +25,61 @@ pub struct Map {
 // actually in the tile. The tile is left- and up- inclusive and right-
 // and down- exclusive.
 impl Map {
+  // Reads a Map from a file.
+  //
+  // The format is like so:
+  // WIDTH
+  // HEIGHT
+  // TILES
+  //
+  // TILES is a grid of WIDTH by HEIGHT tile entries. Each entry is either X for
+  // a wall or O for open.
+  pub fn from_file(path: &str) -> Result<Map, String> {
+    let file = std::fs::read_to_string(path).map_err(|e| format!("err reading file: {:?}", e))?;
+    let mut lines = file.lines();
+
+    let width: u32 = lines
+      .next()
+      .ok_or("map missing WIDTH")?
+      .parse()
+      .or(Err("failed to parse WIDTH"))?;
+    let height: u32 = lines
+      .next()
+      .ok_or("map missing HEIGHT")?
+      .parse()
+      .or(Err("failed to parse WIDTH"))?;
+    let mut grid_tiles = Vec::new();
+    grid_tiles.reserve(width as usize * height as usize);
+    for i in 0..height {
+      let row = lines.next().ok_or(format!(
+        "map ends at row {} of expected HEIGHT={}",
+        i, height
+      ))?;
+      if row.len() == width as usize {
+        for c in row.chars() {
+          match c {
+            'X' => grid_tiles.push(GridTile::Obstacle),
+            'O' => grid_tiles.push(GridTile::Empty),
+            _ => {}
+          }
+        }
+      } else {
+        return Err(format!(
+          "row {} has length {}, when it should be WIDTH={}",
+          i,
+          row.len(),
+          width
+        ));
+      }
+    }
+
+    Ok(Map {
+      width,
+      height,
+      grid_tiles,
+    })
+  }
+
   pub fn get_tile(&self, p: TilePoint) -> Option<GridTile> {
     let TilePoint { x, y } = p;
     if self.width <= x || self.height <= y {
